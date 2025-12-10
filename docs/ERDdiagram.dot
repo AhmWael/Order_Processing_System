@@ -1,0 +1,167 @@
+digraph BookstoreChen {
+    graph [splines=true, rankdir=LR, fontsize=12];
+
+    node [fontname="Helvetica"];
+
+    // ---------- ENTITIES ----------
+    node [shape=rectangle];
+    Publisher [label="Publisher"];
+    Author [label="Author"];
+    Book [label="Book"];
+    User [label="User"];
+    Order [label="Order"];
+    Cart [label="Cart"];
+    Credit_Card [label="Credit_Card"];
+
+    // Weak entities (double rectangle)
+    node [shape=rectangle, peripheries=2];
+    BookAuthors [label="BookAuthors"];
+    Cart_items [label="Cart_items"];
+    Cust_order_items [label="Cust_order_items"];
+    Cust_orders [label="Cust_orders"];
+
+    // ---------- ATTRIBUTES ----------
+    node [shape=ellipse, peripheries=1];
+
+    // Publisher attributes
+    pub_id [label="<u>pub_id</u>"];
+    pub_name [label="pub_name"];
+    pub_address [label="address"];
+    pub_phone [label="phone(s)" peripheries=2]; // multivalued
+
+    // Author attributes
+    auth_id [label="<u>auth_id</u>"];
+    auth_name [label="name"];
+
+    // Book attributes
+    isbn [label="<u>ISBN</u>"];
+    title [label="title"];
+    pub_year [label="publication_year"];
+    selling_price [label="selling_price"];
+    category [label="category"];
+    stock [label="stock"];
+    threshold [label="threshold"];
+
+    // User attributes
+    u_id [label="<u>u_id</u>"];
+    username [label="username"];
+    password [label="password"];
+    lastname [label="lastname"];
+    firstname [label="firstname"];
+    email [label="email"];
+    user_phone [label="phone"];
+    addr [label="addr"];
+    role [label="role"];
+
+    // Order attributes
+    order_id [label="<u>order_id</u>"];
+    order_date [label="order_date"];
+    order_quantity [label="quantity"];
+    status [label="status"];
+
+    // Cart attributes
+    cart_id [label="<u>cart_id</u>"];
+
+    // Credit Card
+    card_id [label="<u>card_id</u>"];
+    card_no [label="card_no (hashed)"];
+    expiry_date [label="expiry_date"];
+
+    // Cart_items / Cust_order_items
+    item_quantity [label="quantity"];
+    item_price [label="price"];
+
+    // ---------- RELATIONSHIPS ----------
+    node [shape=diamond];
+    Published_By [label="Published_By"];
+    Written_By [label="Written_By", peripheries=2]; // identifying relationship
+    Order_Contains [label="Order_Contains"];
+    Cart_Contains [label="Cart_Contains"];
+    Places_Order [label="Places"];
+    Has_Cart [label="Has"];
+    User_Card [label="Has_CreditCard"];
+
+    // ---------- ENTITY-ATTRIBUTE CONNECTIONS ----------
+    // Publisher attributes
+    Publisher -> pub_id [arrowhead=none];
+    Publisher -> pub_name [arrowhead=none];
+    Publisher -> pub_address [arrowhead=none];
+    Publisher -> pub_phone [arrowhead=none];
+
+    // Author attributes
+    Author -> auth_id [arrowhead=none];
+    Author -> auth_name [arrowhead=none];
+
+    // Book attributes
+    Book -> isbn [arrowhead=none];
+    Book -> title [arrowhead=none];
+    Book -> pub_year [arrowhead=none];
+    Book -> selling_price [arrowhead=none];
+    Book -> category [arrowhead=none];
+    Book -> stock [arrowhead=none];
+    Book -> threshold [arrowhead=none];
+
+    // User attributes
+    User -> u_id [arrowhead=none];
+    User -> username [arrowhead=none];
+    User -> password [arrowhead=none];
+    User -> lastname [arrowhead=none];
+    User -> firstname [arrowhead=none];
+    User -> email [arrowhead=none];
+    User -> user_phone [arrowhead=none];
+    User -> addr [arrowhead=none];
+    User -> role [arrowhead=none];
+
+    // Order attributes
+    Order -> order_id [arrowhead=none];
+    Order -> order_date [arrowhead=none];
+    Order -> order_quantity [arrowhead=none];
+    Order -> status [arrowhead=none];
+
+    // Cart attributes
+    Cart -> cart_id [arrowhead=none];
+
+    // Credit Card attributes
+    Credit_Card -> card_id [arrowhead=none];
+    Credit_Card -> card_no [arrowhead=none];
+    Credit_Card -> expiry_date [arrowhead=none];
+
+    // Cart_items attributes
+    Cart_items -> item_quantity [arrowhead=none];
+
+    // Cust_order_items attributes
+    Cust_order_items -> item_quantity [arrowhead=none];
+    Cust_order_items -> item_price [arrowhead=none];
+
+    // ---------- ENTITY-RELATIONSHIP CONNECTIONS ----------
+    // Publisher publishes Book
+    Publisher -> Published_By [arrowhead=none, label="1"];
+    Book -> Published_By [arrowhead=none, label="N"];
+
+    // Book - Author (many-to-many, weak entity)
+    Book -> Written_By [arrowhead=none, label="N"];
+    Author -> Written_By [arrowhead=none, label="N"];
+    Written_By -> BookAuthors [arrowhead=none, penwidth=3]; // total participation
+
+    // Orders
+    Order -> Order_Contains [arrowhead=none, label="1"];
+    Book -> Order_Contains [arrowhead=none, label="N"];
+    Order_Contains -> Cust_order_items [arrowhead=none, penwidth=3];
+
+    // User places Orders
+    User -> Places_Order [arrowhead=none, label="1"];
+    Places_Order -> Cust_orders [arrowhead=none, penwidth=3];
+
+    // Cart - Book
+    Cart -> Cart_Contains [arrowhead=none, label="1"];
+    Book -> Cart_Contains [arrowhead=none, label="N"];
+    Cart_Contains -> Cart_items [arrowhead=none, penwidth=3];
+
+    // User has Cart
+    User -> Has_Cart [arrowhead=none, label="1"];
+    Has_Cart -> Cart [arrowhead=none, penwidth=3];
+
+    // User has Credit Card
+    User -> User_Card [arrowhead=none, label="1"];
+    User_Card -> Credit_Card [arrowhead=none, penwidth=3];
+}
