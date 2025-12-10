@@ -1,6 +1,5 @@
-digraph BookstoreChen {
+digraph BookstoreMySQL {
     graph [splines=true, rankdir=LR, fontsize=12];
-
     node [fontname="Helvetica"];
 
     // ---------- ENTITIES ----------
@@ -9,35 +8,38 @@ digraph BookstoreChen {
     Author [label="Author"];
     Book [label="Book"];
     User [label="User"];
-    Order [label="Order"];
+    ReplenishmentOrder [label="ReplenishmentOrder"];
+    CustomerOrder [label="CustomerOrder"];
     Cart [label="Cart"];
-    Credit_Card [label="Credit_Card"];
+    CreditCard [label="CreditCard"];
+    PublisherPhone [label="PublisherPhone"]; // New entity for phone numbers
 
     // Weak entities (double rectangle)
     node [shape=rectangle, peripheries=2];
-    BookAuthors [label="BookAuthors"];
-    Cart_items [label="Cart_items"];
-    Cust_order_items [label="Cust_order_items"];
-    Cust_orders [label="Cust_orders"];
+    BookAuthor [label="BookAuthor"];
+    CartItem [label="CartItem"];
+    CustomerOrderItem [label="CustomerOrderItem"];
 
     // ---------- ATTRIBUTES ----------
     node [shape=ellipse, peripheries=1];
 
     // Publisher attributes
-    pub_id [label="<u>pub_id</u>"];
-    pub_name [label="pub_name"];
+    pub_id [label="<u>publisher_id</u>"];
+    pub_name [label="publisher_name"];
     pub_address [label="address"];
-    pub_phone [label="phone(s)" peripheries=2]; // multivalued
+
+    // PublisherPhone attribute
+    phone [label="phone"];
 
     // Author attributes
-    auth_id [label="<u>auth_id</u>"];
-    auth_name [label="name"];
+    auth_id [label="<u>author_id</u>"];
+    auth_name [label="author_name"];
 
     // Book attributes
-    isbn [label="<u>ISBN</u>"];
+    isbn [label="<u>isbn</u>"];
     title [label="title"];
-    pub_year [label="publication_year"];
-    selling_price [label="selling_price"];
+    pub_year [label="pub_year"];
+    price [label="price"];
     category [label="category"];
     stock [label="stock"];
     threshold [label="threshold"];
@@ -46,122 +48,128 @@ digraph BookstoreChen {
     u_id [label="<u>u_id</u>"];
     username [label="username"];
     password [label="password"];
-    lastname [label="lastname"];
-    firstname [label="firstname"];
+    last_name [label="last_name"];
+    first_name [label="first_name"];
     email [label="email"];
     user_phone [label="phone"];
-    addr [label="addr"];
+    address [label="address"];
     role [label="role"];
 
-    // Order attributes
-    order_id [label="<u>order_id</u>"];
-    order_date [label="order_date"];
-    order_quantity [label="quantity"];
-    status [label="status"];
+    // Replenishment Order attributes
+    ro_id [label="<u>order_id</u>"];
+    ro_date [label="order_date"];
+    ro_quantity [label="quantity"];
+    ro_status [label="status"];
+
+    // Customer Order attributes
+    co_id [label="<u>order_id</u>"];
+    co_date [label="order_date"];
+    co_total [label="total_price"];
 
     // Cart attributes
     cart_id [label="<u>cart_id</u>"];
 
-    // Credit Card
-    card_id [label="<u>card_id</u>"];
-    card_no [label="card_no (hashed)"];
-    expiry_date [label="expiry_date"];
+    // Credit Card attributes
+    card_number [label="<u>card_number</u>"];
+    cardholder_name [label="cardholder_name"];
+    expiration_date [label="expiration_date"];
 
-    // Cart_items / Cust_order_items
-    item_quantity [label="quantity"];
-    item_price [label="price"];
+    // Weak entities attributes
+    ba_isbn [label="isbn"];
+    ba_author_id [label="author_id"];
+    ci_quantity [label="quantity"];
+    coi_quantity [label="quantity"];
+    coi_price [label="price"];
 
     // ---------- RELATIONSHIPS ----------
     node [shape=diamond];
     Published_By [label="Published_By"];
-    Written_By [label="Written_By", peripheries=2]; // identifying relationship
-    Order_Contains [label="Order_Contains"];
-    Cart_Contains [label="Cart_Contains"];
+    Written_By [label="Written_By"];
+    Contains_Cart [label="Contains"];
+    Contains_Order [label="Contains"];
     Places_Order [label="Places"];
     Has_Cart [label="Has"];
-    User_Card [label="Has_CreditCard"];
+    Has_CreditCard [label="Has"];
+    Publisher_HasPhone [label="Has"];
 
     // ---------- ENTITY-ATTRIBUTE CONNECTIONS ----------
-    // Publisher attributes
     Publisher -> pub_id [arrowhead=none];
     Publisher -> pub_name [arrowhead=none];
     Publisher -> pub_address [arrowhead=none];
-    Publisher -> pub_phone [arrowhead=none];
 
-    // Author attributes
+    PublisherPhone -> phone [arrowhead=none];
+
     Author -> auth_id [arrowhead=none];
     Author -> auth_name [arrowhead=none];
 
-    // Book attributes
     Book -> isbn [arrowhead=none];
     Book -> title [arrowhead=none];
     Book -> pub_year [arrowhead=none];
-    Book -> selling_price [arrowhead=none];
+    Book -> price [arrowhead=none];
     Book -> category [arrowhead=none];
     Book -> stock [arrowhead=none];
     Book -> threshold [arrowhead=none];
 
-    // User attributes
     User -> u_id [arrowhead=none];
     User -> username [arrowhead=none];
     User -> password [arrowhead=none];
-    User -> lastname [arrowhead=none];
-    User -> firstname [arrowhead=none];
+    User -> last_name [arrowhead=none];
+    User -> first_name [arrowhead=none];
     User -> email [arrowhead=none];
     User -> user_phone [arrowhead=none];
-    User -> addr [arrowhead=none];
+    User -> address [arrowhead=none];
     User -> role [arrowhead=none];
 
-    // Order attributes
-    Order -> order_id [arrowhead=none];
-    Order -> order_date [arrowhead=none];
-    Order -> order_quantity [arrowhead=none];
-    Order -> status [arrowhead=none];
+    ReplenishmentOrder -> ro_id [arrowhead=none];
+    ReplenishmentOrder -> ro_date [arrowhead=none];
+    ReplenishmentOrder -> ro_quantity [arrowhead=none];
+    ReplenishmentOrder -> ro_status [arrowhead=none];
 
-    // Cart attributes
+    CustomerOrder -> co_id [arrowhead=none];
+    CustomerOrder -> co_date [arrowhead=none];
+    CustomerOrder -> co_total [arrowhead=none];
+
     Cart -> cart_id [arrowhead=none];
 
-    // Credit Card attributes
-    Credit_Card -> card_id [arrowhead=none];
-    Credit_Card -> card_no [arrowhead=none];
-    Credit_Card -> expiry_date [arrowhead=none];
+    CreditCard -> card_number [arrowhead=none];
+    CreditCard -> cardholder_name [arrowhead=none];
+    CreditCard -> expiration_date [arrowhead=none];
 
-    // Cart_items attributes
-    Cart_items -> item_quantity [arrowhead=none];
+    BookAuthor -> ba_isbn [arrowhead=none];
+    BookAuthor -> ba_author_id [arrowhead=none];
 
-    // Cust_order_items attributes
-    Cust_order_items -> item_quantity [arrowhead=none];
-    Cust_order_items -> item_price [arrowhead=none];
+    CartItem -> ci_quantity [arrowhead=none];
+    CustomerOrderItem -> coi_quantity [arrowhead=none];
+    CustomerOrderItem -> coi_price [arrowhead=none];
 
     // ---------- ENTITY-RELATIONSHIP CONNECTIONS ----------
-    // Publisher publishes Book
     Publisher -> Published_By [arrowhead=none, label="1"];
     Book -> Published_By [arrowhead=none, label="N"];
 
-    // Book - Author (many-to-many, weak entity)
     Book -> Written_By [arrowhead=none, label="N"];
     Author -> Written_By [arrowhead=none, label="N"];
-    Written_By -> BookAuthors [arrowhead=none, penwidth=3]; // total participation
+    Written_By -> BookAuthor [arrowhead=none, penwidth=3];
 
-    // Orders
-    Order -> Order_Contains [arrowhead=none, label="1"];
-    Book -> Order_Contains [arrowhead=none, label="N"];
-    Order_Contains -> Cust_order_items [arrowhead=none, penwidth=3];
+    Cart -> Contains_Cart [arrowhead=none, label="1"];
+    Book -> Contains_Cart [arrowhead=none, label="N"];
+    Contains_Cart -> CartItem [arrowhead=none, penwidth=3];
 
-    // User places Orders
+    CustomerOrder -> Contains_Order [arrowhead=none, label="1"];
+    Book -> Contains_Order [arrowhead=none, label="N"];
+    Contains_Order -> CustomerOrderItem [arrowhead=none, penwidth=3];
+
     User -> Places_Order [arrowhead=none, label="1"];
-    Places_Order -> Cust_orders [arrowhead=none, penwidth=3];
+    Places_Order -> CustomerOrder [arrowhead=none, penwidth=3];
 
-    // Cart - Book
-    Cart -> Cart_Contains [arrowhead=none, label="1"];
-    Book -> Cart_Contains [arrowhead=none, label="N"];
-    Cart_Contains -> Cart_items [arrowhead=none, penwidth=3];
-
-    // User has Cart
     User -> Has_Cart [arrowhead=none, label="1"];
     Has_Cart -> Cart [arrowhead=none, penwidth=3];
 
-    // User has Credit Card
-    User -> User_Card [arrowhead=none, label="1"];
-    User_Card -> Credit_Card [arrowhead=none, penwidth=3];
+    User -> Has_CreditCard [arrowhead=none, label="1"];
+    Has_CreditCard -> CreditCard [arrowhead=none, penwidth=3];
+
+    Book -> ReplenishmentOrder [arrowhead=none, label="1"];
+    ReplenishmentOrder -> Book [arrowhead=none, label="N"];
+
+    Publisher -> Publisher_HasPhone [arrowhead=none, label="1"];
+    Publisher_HasPhone -> PublisherPhone [arrowhead=none, label="N"];
 }
