@@ -58,6 +58,7 @@ OrderProcessingSystem/
 │   ├── Controllers/
 │   ├── Services/
 │   ├── Repositories/
+│   ├── Migrations/
 │   ├── Models/
 │   ├── DTOs/
 │   ├── Utilities/
@@ -96,11 +97,14 @@ The system includes the following main tables:
 * `Authors`
 * `BookAuthors`
 * `Publishers`
-* `Orders`
-* `Customers`
-* `ShoppingCartItems`
-* `Sales`
-* `SaleItems`
+* `PublisherPhones`
+* `ReplenishmentOrder`
+* `Users`
+* `Cart`
+* `CartItems`
+* `CustomerOrder`
+* `CustomerOrderItems`
+* `CreditCard`
 
 **Triggers & Constraints:**
 

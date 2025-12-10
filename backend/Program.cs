@@ -1,5 +1,6 @@
 using Npgsql;
 using Dapper;
+using backend.Migrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,8 @@ if (string.IsNullOrEmpty(connectionString))
 {
     throw new Exception("CONNECTION_STRING environment variable is missing.");
 }
+
+MigrationRunner.RunMigrations(connectionString);
 
 var app = builder.Build();
 
