@@ -1,8 +1,3 @@
-CREATE TABLE IF NOT EXISTS __MigrationsHistory (
-    MigrationId VARCHAR(50) PRIMARY KEY,
-    AppliedOn TIMESTAMP DEFAULT NOW()
-);
-
 -- Enable UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -34,13 +29,13 @@ CREATE TABLE book (
     pub_year INT,
     price DECIMAL(10,2) NOT NULL,
     category VARCHAR(20) NOT NULL CHECK (category IN ('Science','Art','Religion','History','Geography')),
-    stock INT NOT NULL,
-    threshold INT NOT NULL
+    stock INT NOT NULL check (stock >= 0), 
+    threshold INT NOT NULL check (threshold >= 0)
 );
 
 CREATE TABLE book_author (
-    isbn VARCHAR(13) REFERENCES book(isbn) ON DELETE CASCADE,
-    author_id UUID REFERENCES author(author_id) ON DELETE CASCADE,
+    isbn VARCHAR(13) REFERENCES book(isbn) ON DELETE RESTRICT,
+    author_id UUID REFERENCES author(author_id) ON DELETE RESTRICT,
     PRIMARY KEY (isbn, author_id)
 );
 
@@ -49,7 +44,7 @@ CREATE TABLE replenishment_order (
     order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     isbn VARCHAR(13) NOT NULL REFERENCES book(isbn),
     order_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    quantity INT NOT NULL,
+    quantity INT NOT NULL check (quantity > 0),
     status VARCHAR(20) NOT NULL CHECK (status IN ('Pending','Confirmed'))
 );
 
@@ -57,7 +52,7 @@ CREATE TABLE replenishment_order (
 CREATE TABLE "user" (
     u_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL, -- password hashed externally by backend
     last_name VARCHAR(255) NOT NULL,
     first_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -97,8 +92,10 @@ CREATE TABLE customer_order_item (
 
 -- 8) Credit Cards
 CREATE TABLE credit_card (
-    card_number VARCHAR(16) PRIMARY KEY,
+    card_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     u_id UUID NOT NULL REFERENCES "user"(u_id),
     cardholder_name VARCHAR(255) NOT NULL,
-    expiration_date CHAR(5) NOT NULL
+    expiration_date CHAR(5) NOT NULL,
+    encrypted_card_number BYTEA NOT NULL, -- encyrypted externally by backend
+    last4 VARCHAR(4) NOT NULL -- last 4 digits for display
 );
