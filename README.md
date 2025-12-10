@@ -1,6 +1,6 @@
 # Order Processing System
 
-A simplified **online bookstore system** built using **.NET 8 (C#)** for the backend and **Next.js** for the frontend. This system supports **Administrators** and **Customers**, managing books, publishers, stock levels, orders, sales, and shopping carts.
+A simplified **online bookstore system** built using **.NET 10 (C#)** for the backend and **Next.js** for the frontend. This system supports **Administrators** and **Customers**, managing books, publishers, stock levels, orders, sales, and shopping carts.
 
 The project uses **raw SQL** (no ORM), **Docker & Docker Compose**, **unit testing**, and **CI/CD pipelines**.
 
@@ -40,7 +40,7 @@ The project uses **raw SQL** (no ORM), **Docker & Docker Compose**, **unit testi
 
 ## **Tech Stack**
 
-* **Backend:** .NET 8, ASP.NET Core Web API, C#
+* **Backend:** .NET 10, ASP.NET Core Web API, C#
 * **Frontend:** Next.js, React, TailwindCSS
 * **Database:** PostgreSQL (raw SQL)
 * **Containerization:** Docker & Docker Compose
