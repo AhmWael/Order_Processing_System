@@ -23,7 +23,7 @@ CREATE TABLE author (
 
 -- 3) Books
 CREATE TABLE book (
-    isbn VARCHAR(13) PRIMARY KEY,
+    isbn VARCHAR(20) PRIMARY KEY, --allowing extra space for hyphens
     title VARCHAR(255) NOT NULL,
     pub_id UUID NOT NULL REFERENCES publisher(publisher_id),
     pub_year INT,
@@ -34,7 +34,7 @@ CREATE TABLE book (
 );
 
 CREATE TABLE book_author (
-    isbn VARCHAR(13) REFERENCES book(isbn) ON DELETE RESTRICT,
+    isbn VARCHAR(20) REFERENCES book(isbn) ON DELETE RESTRICT,
     author_id UUID REFERENCES author(author_id) ON DELETE RESTRICT,
     PRIMARY KEY (isbn, author_id)
 );
@@ -42,7 +42,7 @@ CREATE TABLE book_author (
 -- 4) Replenishment Orders
 CREATE TABLE replenishment_order (
     order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    isbn VARCHAR(13) NOT NULL REFERENCES book(isbn),
+    isbn VARCHAR(20) NOT NULL REFERENCES book(isbn) ON DELETE RESTRICT, 
     order_date DATE NOT NULL DEFAULT CURRENT_DATE,
     quantity INT NOT NULL check (quantity > 0),
     status VARCHAR(20) NOT NULL CHECK (status IN ('Pending','Confirmed'))
@@ -64,12 +64,12 @@ CREATE TABLE "user" (
 -- 6) Shopping Carts
 CREATE TABLE cart (
     cart_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    u_id UUID NOT NULL REFERENCES "user"(u_id)
+    u_id UUID NOT NULL REFERENCES "user"(u_id) ON DELETE CASCADE
 );
 
 CREATE TABLE cart_item (
     cart_id UUID REFERENCES cart(cart_id) ON DELETE CASCADE,
-    isbn VARCHAR(13) REFERENCES book(isbn),
+    isbn VARCHAR(20) REFERENCES book(isbn),
     quantity INT NOT NULL check (quantity > 0),
     PRIMARY KEY (cart_id, isbn)
 );
@@ -78,13 +78,13 @@ CREATE TABLE cart_item (
 CREATE TABLE customer_order (
     order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     u_id UUID NOT NULL REFERENCES "user"(u_id),
-    order_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    order_date DATE NOT NULL DEFAULT CURRENT_DATE ON DELETE RESTRICT,
     total_price DECIMAL(10,2) check (total_price >= 0) NOT NULL
 );
 
 CREATE TABLE customer_order_item (
     order_id UUID REFERENCES customer_order(order_id) ON DELETE CASCADE,
-    isbn VARCHAR(13) REFERENCES book(isbn),
+    isbn VARCHAR(20) REFERENCES book(isbn),
     quantity INT NOT NULL check (quantity > 0),
     price DECIMAL(10,2) NOT NULL check (price >= 0),
     PRIMARY KEY (order_id, isbn)
