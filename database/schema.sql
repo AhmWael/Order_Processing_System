@@ -27,7 +27,7 @@ CREATE TABLE book (
     title VARCHAR(255) NOT NULL,
     pub_id UUID NOT NULL REFERENCES publisher(publisher_id),
     pub_year INT,
-    price DECIMAL(10,2) NOT NULL,
+    price DECIMAL(10,2) check (price >= 0) NOT NULL,
     category VARCHAR(20) NOT NULL CHECK (category IN ('Science','Art','Religion','History','Geography')),
     stock INT NOT NULL check (stock >= 0), 
     threshold INT NOT NULL check (threshold >= 0)
@@ -70,7 +70,7 @@ CREATE TABLE cart (
 CREATE TABLE cart_item (
     cart_id UUID REFERENCES cart(cart_id) ON DELETE CASCADE,
     isbn VARCHAR(13) REFERENCES book(isbn),
-    quantity INT NOT NULL,
+    quantity INT NOT NULL check (quantity > 0),
     PRIMARY KEY (cart_id, isbn)
 );
 
@@ -79,14 +79,14 @@ CREATE TABLE customer_order (
     order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     u_id UUID NOT NULL REFERENCES "user"(u_id),
     order_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    total_price DECIMAL(10,2) NOT NULL
+    total_price DECIMAL(10,2) check (total_price >= 0) NOT NULL
 );
 
 CREATE TABLE customer_order_item (
     order_id UUID REFERENCES customer_order(order_id) ON DELETE CASCADE,
     isbn VARCHAR(13) REFERENCES book(isbn),
-    quantity INT NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
+    quantity INT NOT NULL check (quantity > 0),
+    price DECIMAL(10,2) NOT NULL check (price >= 0),
     PRIMARY KEY (order_id, isbn)
 );
 
@@ -96,6 +96,7 @@ CREATE TABLE credit_card (
     u_id UUID NOT NULL REFERENCES "user"(u_id),
     cardholder_name VARCHAR(255) NOT NULL,
     expiration_date CHAR(5) NOT NULL,
-    encrypted_card_number BYTEA NOT NULL, -- encyrypted externally by backend
-    last4 VARCHAR(4) NOT NULL -- last 4 digits for display
+    encrypted_card_number BYTEA NOT NULL, -- encrypted externally by backend
+    last4 VARCHAR(4) NOT NULL, -- last 4 digits for display
+    keyver VARCHAR(16) NOT NULL DEFAULT 'v1'
 );
