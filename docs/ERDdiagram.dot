@@ -12,7 +12,7 @@ digraph BookstoreMySQL {
     CustomerOrder [label="CustomerOrder"];
     Cart [label="Cart"];
     CreditCard [label="CreditCard"];
-    PublisherPhone [label="PublisherPhone"]; // New entity for phone numbers
+    PublisherPhone [label="PublisherPhone"];
 
     // Weak entities (double rectangle)
     node [shape=rectangle, peripheries=2];
@@ -27,8 +27,6 @@ digraph BookstoreMySQL {
     pub_id [label="<u>publisher_id</u>"];
     pub_name [label="publisher_name"];
     pub_address [label="address"];
-
-    // PublisherPhone attribute
     phone [label="phone"];
 
     // Author attributes
@@ -69,12 +67,16 @@ digraph BookstoreMySQL {
     // Cart attributes
     cart_id [label="<u>cart_id</u>"];
 
-    // Credit Card attributes
-    card_number [label="<u>card_number</u>"];
+    // Credit Card attributes (updated)
+    card_id [label="<u>card_id</u>"];
+    cc_u_id [label="u_id"];
     cardholder_name [label="cardholder_name"];
     expiration_date [label="expiration_date"];
+    encrypted_card_number [label="encrypted_card_number"];
+    last4 [label="last4"];
+    keyver [label="keyver"];
 
-    // Weak entities attributes
+    // Weak entity attributes
     ba_isbn [label="isbn"];
     ba_author_id [label="author_id"];
     ci_quantity [label="quantity"];
@@ -96,7 +98,6 @@ digraph BookstoreMySQL {
     Publisher -> pub_id [arrowhead=none];
     Publisher -> pub_name [arrowhead=none];
     Publisher -> pub_address [arrowhead=none];
-
     PublisherPhone -> phone [arrowhead=none];
 
     Author -> auth_id [arrowhead=none];
@@ -131,9 +132,13 @@ digraph BookstoreMySQL {
 
     Cart -> cart_id [arrowhead=none];
 
-    CreditCard -> card_number [arrowhead=none];
+    CreditCard -> card_id [arrowhead=none];
+    CreditCard -> cc_u_id [arrowhead=none];
     CreditCard -> cardholder_name [arrowhead=none];
     CreditCard -> expiration_date [arrowhead=none];
+    CreditCard -> encrypted_card_number [arrowhead=none];
+    CreditCard -> last4 [arrowhead=none];
+    CreditCard -> keyver [arrowhead=none];
 
     BookAuthor -> ba_isbn [arrowhead=none];
     BookAuthor -> ba_author_id [arrowhead=none];
