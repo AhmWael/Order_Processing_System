@@ -77,8 +77,8 @@ CREATE TABLE cart_item (
 -- 7) Customer Orders
 CREATE TABLE customer_order (
     order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    u_id UUID NOT NULL REFERENCES "user"(u_id),
-    order_date DATE NOT NULL DEFAULT CURRENT_DATE ON DELETE RESTRICT,
+    u_id UUID NOT NULL REFERENCES "user"(u_id) ON DELETE RESTRICT,
+    order_date DATE NOT NULL DEFAULT CURRENT_DATE,
     total_price DECIMAL(10,2) check (total_price >= 0) NOT NULL
 );
 
