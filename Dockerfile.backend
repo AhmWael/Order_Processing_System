@@ -1,27 +1,27 @@
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 
 COPY . /source
-
 WORKDIR /source/backend
 
-# TODO: Adjust the TARGETARCH handling if you need to build for architectures
-# other than amd64 and arm64.
 ARG TARGETARCH
 
 RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
     dotnet publish -a ${TARGETARCH/amd64/x64} --use-current-runtime --self-contained false -o /app
 
-# If you need to enable globalization and time zones:
-# https://github.com/dotnet/dotnet-docker/blob/main/samples/enable-globalization.md
-################################################################################# Create a new stage for running the application that contains the minimal# runtime dependencies for the application. This often uses a different base# image from the build stage where the necessary files are copied from the build# stage.## The example below uses an aspnet alpine image as the foundation for running the app.# It will also use whatever happens to be the most recent version of that tag when you# build your Dockerfile. If reproducibility is important, consider using a more specific# version (e.g., aspnet:7.0.10-alpine-3.18),# or SHA (e.g., mcr.microsoft.com/dotnet/aspnet@sha256:f3d99f54d504a21d38e4cc2f13ff47d67235efeeb85c109d3d1ff1808b38d034).
+# ---- Final stage ----
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 WORKDIR /app
 
+# Install runtime dependencies
+RUN apk add --no-cache krb5-libs icu-libs libgcc libstdc++
+
+# Copy published app
 COPY --from=build /app .
 
-# Switch to a non-privileged user (defined in the base image) that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
-# and https://github.com/dotnet/dotnet-docker/discussions/4764
+# Copy migrations after publishing to avoid overwriting
+COPY backend/Migrations/ ./Migrations/
+
+# Switch to non-privileged user
 USER $APP_UID
 
 ENTRYPOINT ["dotnet", "backend.dll"]
