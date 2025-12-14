@@ -1,0 +1,29 @@
+using backend.DTOs;
+using backend.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace backend.Controllers;
+
+[ApiController]
+[Route("api/auth")]
+public class AuthController : ControllerBase
+{
+    private readonly IUserService _service;
+
+    public AuthController(IUserService service)
+    {
+        _service = service;
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
+    {
+        return Ok(await _service.RegisterAsync(dto));
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
+    {
+        return Ok(await _service.LoginAsync(dto));
+    }
+}

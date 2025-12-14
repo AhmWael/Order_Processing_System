@@ -90,6 +90,8 @@ Thumbs.db
 .vscode/
 .idea/
 
+Contribution Guidelines & Conventions.md
+
 # Optional: ignore lockfiles (if using only one package manager)
 # package-lock.json
 # yarn.lock

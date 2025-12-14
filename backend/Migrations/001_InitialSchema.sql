@@ -56,7 +56,7 @@ CREATE TABLE "user" (
     last_name VARCHAR(255) NOT NULL,
     first_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    phone VARCHAR(20) UNIQUE,
+    phone VARCHAR(20),
     address VARCHAR(255),
     role VARCHAR(10) NOT NULL CHECK (role IN ('Admin','Customer'))
 );
