@@ -24,3 +24,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.input-field {
+  @apply bg-indigo-300 ring-1 ring-indigo-600 text-indigo-950 text-center rounded-xl;
+}
