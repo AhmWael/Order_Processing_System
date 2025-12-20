@@ -48,7 +48,16 @@ public class UserService : IUserService
 
         await _repo.CreateAsync(user);
 
-        return GenerateJwt(user);
+        var accessToken = GenerateJwt(user, false);   // short-lived access token
+        var refreshToken = GenerateJwt(user, true);   // long-lived refresh token
+
+        return new AuthResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            Username = user.Username,
+            Role = user.Role
+        };
     }
 
     public async Task<AuthResponseDto> LoginAsync(UserLoginDto dto)
@@ -61,10 +70,20 @@ public class UserService : IUserService
         if (result == PasswordVerificationResult.Failed)
             throw new Exception("Invalid username or password.");
 
-        return GenerateJwt(user);
+        var accessToken = GenerateJwt(user, false);
+        var refreshToken = GenerateJwt(user, true);
+
+        return new AuthResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            Username = user.Username,
+            Role = user.Role
+        };
     }
 
-    private AuthResponseDto GenerateJwt(User user)
+    // Helper method to generate JWT
+    private string GenerateJwt(User user, bool isRefresh = false)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -73,23 +92,73 @@ public class UserService : IUserService
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Username),
             new Claim("uid", user.UId.ToString()),
-            new Claim("role", user.Role)
+            new Claim("role", user.Role),
+            new Claim("type", isRefresh ? "refresh" : "access")
         };
+
+        // Set token expiration based on type
+        var expires = isRefresh ? DateTime.UtcNow.AddDays(7) : DateTime.UtcNow.AddHours(12);
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(12),
+            expires: expires,
             signingCredentials: creds
         );
 
-        return new AuthResponseDto
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public async Task<AuthResponseDto> RefreshAsync(string refreshToken)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+
+        try
         {
-            Token = new JwtSecurityTokenHandler().WriteToken(token),
-            Username = user.Username,
-            Role = user.Role
-        };
+            // validate the token
+            var principal = tokenHandler.ValidateToken(refreshToken, new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _config["Jwt:Issuer"],
+                ValidAudience = _config["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(key)
+            }, out SecurityToken validatedToken);
+
+            var jwt = validatedToken as JwtSecurityToken;
+
+            // make sure it is a refresh token
+            if (jwt == null || !jwt.Claims.Any(c => c.Type == "type" && c.Value == "refresh"))
+                throw new SecurityTokenException("Invalid refresh token");
+
+            // get username from claims
+            var username = principal.Claims.First(c => c.Type == "sub").Value;
+
+            // get user from repo
+            var user = await _repo.GetByUsernameAsync(username);
+            if (user == null)
+                throw new Exception("User not found");
+
+            // generate new tokens
+            var newAccessToken = GenerateJwt(user, false);
+            //var newRefreshToken = GenerateJwt(user, true); // optional: rotate refresh token
+
+            return new AuthResponseDto
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = refreshToken, // or newRefreshToken if rotating
+                Username = user.Username,
+                Role = user.Role
+            };
+        }
+        catch
+        {
+            throw new SecurityTokenException("Invalid refresh token");
+        }
     }
 
     public async Task<IEnumerable<UserResponseDto>> GetAllUsersAsync()

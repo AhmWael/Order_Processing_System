@@ -8,6 +8,7 @@ public interface IUserService
     Task<AuthResponseDto> LoginAsync(UserLoginDto dto);
     Task<UserResponseDto?> GetUserByUsernameAsync(string username);
     Task<IEnumerable<UserResponseDto>> GetAllUsersAsync();
+    Task<AuthResponseDto> RefreshAsync(string refreshToken);
 
 }
 
