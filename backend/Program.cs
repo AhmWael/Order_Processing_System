@@ -9,6 +9,7 @@ using backend.Services;
 using backend.Services.Seeders;
 using backend.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -63,15 +64,30 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Swagger configuration
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Backend API", Version = "v1" });
 
+    // Define JWT Bearer scheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using Bearer scheme"
+    });
+});
+
+
+// Build and run app
 var app = builder.Build();
 // Seed Super Admin
 await SuperAdminSeeder.SeedAsync(app.Services);
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    //app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
@@ -87,4 +103,5 @@ app.MapControllers();
 
 app.MapGet("/", () => "Hello World!");
 
+// Run the app
 app.Run();
