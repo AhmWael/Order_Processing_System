@@ -60,6 +60,41 @@ public class UserService : IUserService
         };
     }
 
+    public async Task<AuthResponseDto> RegisterAdminAsync(UserRegisterDto dto)
+    {
+        var existingUser = await _repo.GetByUsernameAsync(dto.Username);
+        if (existingUser != null)
+            throw new Exception("Username already exists.");
+
+        var existingEmail = await _repo.GetByEmailAsync(dto.Email);
+        if (existingEmail != null)
+            throw new Exception("Email already in use.");
+
+        var user = new User
+        {
+            Username = dto.Username,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Email = dto.Email,
+            Role = "Admin"
+        };
+
+        user.Password = _passwordHasher.HashPassword(user, dto.Password);
+
+        await _repo.CreateAsync(user);
+
+        var accessToken = GenerateJwt(user, false);   // short-lived access token
+        var refreshToken = GenerateJwt(user, true);   // long-lived refresh token
+
+        return new AuthResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            Username = user.Username,
+            Role = user.Role
+        };
+    }
+
     public async Task<AuthResponseDto> LoginAsync(UserLoginDto dto)
     {
         var user = await _repo.GetByLoginAsync(dto.Login);

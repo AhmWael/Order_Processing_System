@@ -63,7 +63,8 @@ public class UserServiceTests
         var result = await _service.RegisterAsync(dto);
 
         // Assert
-        result.Token.Should().NotBeNullOrEmpty();
+        result.AccessToken.Should().NotBeNullOrEmpty();
+        result.RefreshToken.Should().NotBeNullOrEmpty();
         result.Username.Should().Be("jdoe");
         result.Role.Should().Be("Customer");
 
@@ -106,7 +107,8 @@ public class UserServiceTests
 
         var result = await _service.LoginAsync(dto);
 
-        result.Token.Should().NotBeNullOrEmpty();
+        result.AccessToken.Should().NotBeNullOrEmpty();
+        result.RefreshToken.Should().NotBeNullOrEmpty();
         result.Username.Should().Be("jdoe");
     }
 
@@ -134,7 +136,8 @@ public class UserServiceTests
         var result = await _service.LoginAsync(dto);
 
         result.Username.Should().Be("jdoe");
-        result.Token.Should().NotBeNullOrEmpty();
+        result.AccessToken.Should().NotBeNullOrEmpty();
+        result.RefreshToken.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
