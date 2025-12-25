@@ -2,6 +2,7 @@ using backend.DTOs;
 using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers;
 
@@ -21,6 +22,13 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
     {
         return Ok(await _service.RegisterAsync(dto));
+    }
+
+    [HttpPost("register-admin")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RegisterAdmin([FromBody] UserRegisterDto dto)
+    {
+        return Ok(await _service.RegisterAdminAsync(dto));
     }
 
     [HttpPost("login")]

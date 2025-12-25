@@ -6,6 +6,7 @@ using System.Text;
 using backend.Migrations;
 using backend.Repositories;
 using backend.Services;
+using backend.Services.Seeders;
 using backend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
@@ -59,6 +60,11 @@ builder.Services
         };
     });
 
+builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    });
+
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 // Swagger configuration
@@ -79,6 +85,8 @@ builder.Services.AddSwaggerGen(c =>
 
 // Build and run app
 var app = builder.Build();
+// Seed Super Admin
+await SuperAdminSeeder.SeedAsync(app.Services);
 
 if (app.Environment.IsDevelopment())
 {
