@@ -10,6 +10,7 @@ using backend.Services.Seeders;
 using backend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
+using Microsoft.VisualBasic;
 
 var builder = WebApplication.CreateBuilder(args);
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -26,16 +27,24 @@ builder.Services.AddControllers();
 
 
 // Dapper connection
-builder.Services.AddScoped<IDbConnection>(_ =>
-    new NpgsqlConnection(connectionString)
-);
+builder.Services.AddScoped<IDbConnection>(sp =>
+{
+    var conn = new NpgsqlConnection(connectionString);
+    conn.Open(); // <-- connection is open for all repositories
+    return conn;
+});
+
 
 // DI bindings
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
-
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
+
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IPublisherService, PublisherService>();
 
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 

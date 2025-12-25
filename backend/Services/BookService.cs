@@ -26,7 +26,9 @@ public class BookService : IBookService
             Price = b.Price,
             Category = b.Category,
             Stock = b.Stock,
-            Threshold = b.Threshold
+            Threshold = b.Threshold,
+
+            Authors = b.Authors.Select(a => a.AuthorName).ToList()
         });
     }
 
@@ -45,7 +47,9 @@ public class BookService : IBookService
             Price = book.Price,
             Category = book.Category,
             Stock = book.Stock,
-            Threshold = book.Threshold
+            Threshold = book.Threshold,
+
+            Authors = book.Authors.Select(a => a.AuthorName).ToList()
         };
     }
 
@@ -67,7 +71,7 @@ public class BookService : IBookService
             Threshold = dto.Threshold
         };
 
-        await _repo.CreateAsync(book);
+        await _repo.CreateAsync(book, dto.AuthorIds);
     }
 
     public async Task<bool> UpdateAsync(string isbn, BookUpdateDto dto)
@@ -84,7 +88,8 @@ public class BookService : IBookService
         existing.Stock = dto.Stock;
         existing.Threshold = dto.Threshold;
 
-        await _repo.UpdateAsync(existing);
+        await _repo.UpdateAsync(existing, dto.AuthorIds);
+
         return true;
     }
 

@@ -16,7 +16,6 @@ public class BooksController : ControllerBase
         _service = service;
     }
 
-    // GET /api/books
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? category)
     {
@@ -24,7 +23,6 @@ public class BooksController : ControllerBase
         return Ok(books);
     }
 
-    // GET /api/books/{isbn}
     [HttpGet("{isbn}")]
     public async Task<IActionResult> GetByIsbn(string isbn)
     {
@@ -35,20 +33,26 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
 
-    // POST /api/books (Admin only)
-    [Authorize(Roles = "Admin")]
+    // POST /api/books
+    //[Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] BookCreateDto dto)
     {
+        if (dto.AuthorIds == null || !dto.AuthorIds.Any())
+            return BadRequest("Book must have at least one author.");
+
         await _service.CreateAsync(dto);
         return CreatedAtAction(nameof(GetByIsbn), new { isbn = dto.Isbn }, null);
     }
 
-    // PUT /api/books/{isbn} (Admin only)
+    // PUT /api/books/{isbn}
     [Authorize(Roles = "Admin")]
     [HttpPut("{isbn}")]
     public async Task<IActionResult> Update(string isbn, [FromBody] BookUpdateDto dto)
     {
+        if (dto.AuthorIds == null || !dto.AuthorIds.Any())
+            return BadRequest("Book must have at least one author.");
+
         var updated = await _service.UpdateAsync(isbn, dto);
         if (!updated)
             return NotFound();
@@ -56,7 +60,6 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
-    // DELETE /api/books/{isbn} (Admin only)
     [Authorize(Roles = "Admin")]
     [HttpDelete("{isbn}")]
     public async Task<IActionResult> Delete(string isbn)

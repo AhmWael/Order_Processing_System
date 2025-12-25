@@ -13,4 +13,5 @@ public class Book
 
     public int Stock { get; set; }
     public int Threshold { get; set; }
+    public List<Author> Authors { get; set; }
 }

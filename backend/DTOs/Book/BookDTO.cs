@@ -13,6 +13,8 @@ public class BookCreateDto
 
     public int Stock { get; set; }
     public int Threshold { get; set; }
+
+    public List<Guid> AuthorIds { get; set; }
 }
 
 public class BookUpdateDto
@@ -27,6 +29,8 @@ public class BookUpdateDto
 
     public int Stock { get; set; }
     public int Threshold { get; set; }
+
+    public List<Guid> AuthorIds { get; set; }
 }
 
 public class BookResponseDto
@@ -42,4 +46,6 @@ public class BookResponseDto
 
     public int Stock { get; set; }
     public int Threshold { get; set; }
+
+    public List<string> Authors { get; set; }
 }
