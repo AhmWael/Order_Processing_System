@@ -12,7 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Book, UserPlus, Eye, EyeOff, Loader2, Mail, Phone, MapPin, User } from "lucide-react";
+import {
+  AlertCircle,
+  Book,
+  UserPlus,
+  Eye,
+  EyeOff,
+  Loader2,
+  Mail,
+  Phone,
+  MapPin,
+  User,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { isAuthenticated, getCurrentUser } from "@/lib/auth";
 
@@ -43,12 +54,19 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    
-    if (!username || !password || !firstName || !lastName || !email || !address) {
+
+    if (
+      !username ||
+      !password ||
+      !firstName ||
+      !lastName ||
+      !email ||
+      !address
+    ) {
       setError("Please fill in all required fields");
       return;
     }
-    
+
     if (password !== rePassword) {
       setError("Passwords do not match");
       return;
@@ -65,13 +83,13 @@ export default function SignupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: username,
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          phone: phone || null,
-          address: address || null,
-          password: password,
+          Username: username,
+          FirstName: firstName,
+          LastName: lastName,
+          Email: email,
+          Phone: phone || null,
+          Address: address || null,
+          Password: password,
         }),
       });
 
@@ -89,6 +107,7 @@ export default function SignupPage() {
           errorMessage = res.statusText || `Server error (${res.status})`;
         }
         setError(errorMessage);
+        setLoading(false);
         return;
       }
 
@@ -117,12 +136,16 @@ export default function SignupPage() {
             </div>
             <h1 className="text-3xl font-bold">BookStore</h1>
           </div>
-          <p className="text-muted-foreground">Create a new account to start shopping for books</p>
+          <p className="text-muted-foreground">
+            Create a new account to start shopping for books
+          </p>
         </div>
 
         <Card className="border-2 shadow-lg">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">
+              Create Account
+            </CardTitle>
             <CardDescription className="text-center">
               Fill in your information to create your account
             </CardDescription>
@@ -212,7 +235,11 @@ export default function SignupPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="text-xs text-muted-foreground hover:text-foreground"
                     >
-                      {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {showPassword ? (
+                        <EyeOff className="h-3 w-3" />
+                      ) : (
+                        <Eye className="h-3 w-3" />
+                      )}
                     </button>
                   </div>
                   <Input
@@ -233,7 +260,11 @@ export default function SignupPage() {
                       onClick={() => setShowRePassword(!showRePassword)}
                       className="text-xs text-muted-foreground hover:text-foreground"
                     >
-                      {showRePassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {showRePassword ? (
+                        <EyeOff className="h-3 w-3" />
+                      ) : (
+                        <Eye className="h-3 w-3" />
+                      )}
                     </button>
                   </div>
                   <Input
@@ -305,7 +336,9 @@ export default function SignupPage() {
             </form>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-muted-foreground">Already have an account? </span>
+              <span className="text-muted-foreground">
+                Already have an account?{" "}
+              </span>
               <Link
                 href="/"
                 className="font-medium text-primary hover:underline"

@@ -144,3 +144,25 @@ export interface CheckoutDto {
   cardId: string; // GUID as string
 }
 
+// Orders API
+export const ordersApi = {
+  getAll: () => apiRequest<CustomerOrder[]>(`/orders`),
+  getById: (orderId: string) => apiRequest<CustomerOrder>(`/orders/${orderId}`),
+  getItems: (orderId: string) => apiRequest<CustomerOrderItem[]>(`/orders/${orderId}/items`),
+};
+
+// Types for Orders
+export interface CustomerOrderItem {
+  isbn: string;
+  title: string;
+  quantity: number;
+  price: number;
+}
+
+export interface CustomerOrder {
+  orderId: string;
+  orderDate: string;
+  totalPrice: number;
+  items?: CustomerOrderItem[];
+}
+
