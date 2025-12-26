@@ -17,3 +17,4 @@ services:
       JWT__KEY: ${JWT_KEY}
       JWT__ISSUER: OrderProcessingSystem
       JWT__AUDIENCE: OrderProcessingSystemUsers
+      CREDIT_CARD_ENCRYPTION_KEY: ${CREDIT_CARD_ENCRYPTION_KEY}

@@ -14,10 +14,14 @@ public class CreditCardService : ICreditCardService
     {
         _cardRepo = cardRepo;
         
-        // Get encryption key from configuration or use a default for development
-        // In production, this should come from a secure key management system
-        var keyString = configuration["CreditCard:EncryptionKey"] ?? "MySecretKey12345MySecretKey12345"; // 32 chars for AES-256
-        _encryptionKey = Encoding.UTF8.GetBytes(keyString.PadRight(32).Substring(0, 32));
+        // Get encryption key from environment variable
+        var keyString = configuration["CREDIT_CARD_ENCRYPTION_KEY"] 
+            ?? throw new InvalidOperationException("CREDIT_CARD_ENCRYPTION_KEY environment variable is required");
+        
+        if (keyString.Length != 32)
+            throw new InvalidOperationException("CREDIT_CARD_ENCRYPTION_KEY must be exactly 32 characters for AES-256");
+        
+        _encryptionKey = Encoding.UTF8.GetBytes(keyString);
     }
 
     private byte[] EncryptCardNumber(string cardNumber)
