@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.dev
+      target: dev
+    volumes:
+      - ./backend:/app/backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    environment:
+      CONNECTION_STRING: ${CONNECTION_STRING}
+      ASPNETCORE_ENVIRONMENT: Development
+      JWT__KEY: ${JWT_KEY}
+      JWT__ISSUER: OrderProcessingSystem
+      JWT__AUDIENCE: OrderProcessingSystemUsers

@@ -11,6 +11,7 @@ using backend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using Microsoft.VisualBasic;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -76,20 +77,21 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
-// Swagger configuration
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Backend API", Version = "v1" });
+// // Swagger configuration
+// builder.Services.AddSwaggerGen(c =>
+// {
+//     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Backend API", Version = "v1" });
 
-    // Define JWT Bearer scheme
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        Description = "JWT Authorization header using Bearer scheme"
-    });
-});
+//     // Define JWT Bearer scheme
+//     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//     {
+//         Type = SecuritySchemeType.Http,
+//         Scheme = "bearer",
+//         BearerFormat = "JWT",
+//         Description = "JWT Authorization header using Bearer scheme"
+//     });
+// });
+builder.Services.AddOpenApi();
 
 
 // Build and run app
@@ -99,12 +101,20 @@ await SuperAdminSeeder.SeedAsync(app.Services);
 
 if (app.Environment.IsDevelopment())
 {
-    //app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    app.MapOpenApi();
+    // app.UseSwagger();
+    // app.UseSwaggerUI(c =>
+    // {
+    //     c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+    //     c.RoutePrefix = "swagger/"; // Swagger UI at root: http://localhost:5000/
+    // });
+
+    app.MapScalarApiReference(options =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-        c.RoutePrefix = "swagger/"; // Swagger UI at root: http://localhost:5000/
+        options
+            .WithTitle("Backend API")
+            .WithTheme(ScalarTheme.Default)
+            .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.HttpClient);
     });
 }
 
