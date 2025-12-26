@@ -16,15 +16,25 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { isAuthenticated, getCurrentUser } from "@/lib/auth";
+
 export default function HomePage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      router.push("/user/home");
+    // Check if user is authenticated and redirect based on role
+    if (isAuthenticated()) {
+      const user = getCurrentUser();
+      if (user) {
+        if (user.role === "Customer") {
+          router.push("/user/home");
+        } else if (user.role === "Admin") {
+          router.push("/admin/home");
+        }
+      }
     }
   }, [router]);
   
