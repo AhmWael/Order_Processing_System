@@ -1,65 +1,156 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+export default function HomePage() {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      router.push("/user/home");
+    }
+  }, [router]);
+  
 
-export default function Home() {
+  async function handleSubmit() {
+    setError("");
+    if (!username || !password) {
+      setError("Please enter username and password");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Login: username, Password: password }),
+      });
+
+      if (!res.ok) {
+        let errorMessage = "Invalid username or password";
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorData.title || errorMessage;
+        } catch (parseError) {
+          // If response is not JSON, use status text
+          errorMessage = res.statusText || `Server error (${res.status})`;
+        }
+        setError(errorMessage);
+        return;
+      }
+
+      const data = await res.json();
+      if (!data.accessToken) {
+        setError("Invalid response from server. Missing access token.");
+        return;
+      }
+
+      localStorage.setItem("token", data.accessToken);
+      router.push("/user/home");
+    } catch (err: any) {
+      console.error("Login error:", err);
+
+      // Handle network errors
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        setError(
+          "Cannot connect to server. Please check if the backend is running on http://localhost:8080"
+        );
+      } else if (err instanceof SyntaxError) {
+        setError("Invalid response from server. Please try again.");
+      } else {
+        setError(err.message || "Something went wrong. Please try again.");
+      }
+    }
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-gray-900">
+      <Card className="bg-black w-full max-w-sm ">
+        <CardHeader>
+          <CardTitle className="text-gray-500">Login to your account</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <div className="flex flex-col gap-6">
+            <div className="grid gap-2">
+              <Label htmlFor="Username" className="text-gray-500">
+                Username
+              </Label>
+              <Input
+                id="Username"
+                className="text-gray-400"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                <Label className="text-gray-500" htmlFor="password">
+                  Password
+                </Label>
+                <a
+                  href="#"
+                  className="text-gray-500 ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                >
+                  Forgot your password?
+                </a>
+              </div>
+
+              <Input
+                className="text-gray-400"
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                required
+              />
+            </div>
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex-col gap-2">
+          {error && (
+            <Alert className="p-2 bg-gray-700" variant="destructive">
+              <AlertCircle />
+              <AlertTitle>{error}</AlertTitle>
+            </Alert>
+          )}
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            className="cursor-pointer w-full"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
+            Login
+          </Button>
           <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/signup"
+            className="text-gray-500 text-left text-sm underline-offset-4 hover:underline"
           >
-            Documentation
+            Sign Up
           </a>
-        </div>
-      </main>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
