@@ -160,14 +160,16 @@ function BooksPageContent() {
           </Button>
         )}
         
-        {/* Search Bar and Filters */}
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center mb-6">
-          <div className="flex-1 w-full lg:max-w-2xl">
+        {/* Search Bar */}
+        <div className="mb-4">
+          <div className="max-w-2xl">
             <SearchBar />
           </div>
-          <div className="w-full lg:w-auto lg:flex-shrink-0">
-            <SearchFilters onFilterChange={handleFilterChange} allBooks={allBooks} />
-          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6">
+          <SearchFilters onFilterChange={handleFilterChange} allBooks={allBooks} />
         </div>
       </div>
 

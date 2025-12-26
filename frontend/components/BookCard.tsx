@@ -57,12 +57,12 @@ export default function BookCard({ book, onAddToCart }: BookCardProps) {
     <Card className="flex flex-col h-full hover:shadow-lg transition-shadow">
       <Link href={`/user/books/${book.isbn}`} className="flex-1 flex flex-col">
         <CardHeader className="pb-3">
-          <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center mb-4 overflow-hidden relative">
+          <div className="w-full aspect-[2/3] max-h-44 bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center mb-4 overflow-hidden relative">
             {!imageError && coverUrl ? (
               <img
                 src={coverUrl}
                 alt={book.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={() => setImageError(true)}
               />
             ) : (

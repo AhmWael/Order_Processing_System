@@ -68,7 +68,7 @@ export default function SearchFilters({ onFilterChange, allBooks }: SearchFilter
   const hasActiveFilters = filters.category || filters.author || filters.minPrice || filters.maxPrice;
 
   return (
-    <div className="w-full lg:w-auto">
+    <div className="w-full">
       <div className="flex items-center gap-2 mb-2">
         <Button
           variant="outline"
@@ -86,7 +86,8 @@ export default function SearchFilters({ onFilterChange, allBooks }: SearchFilter
         </Button>
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 mr-1" />
+            Clear Filters
           </Button>
         )}
       </div>
