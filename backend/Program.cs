@@ -46,6 +46,8 @@ builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
 builder.Services.AddScoped<IReplenishmentOrderRepository, ReplenishmentOrderRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICustomerOrderRepository, CustomerOrderRepository>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<ICreditCardRepository, CreditCardRepository>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -54,6 +56,8 @@ builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddScoped<IReplenishmentOrderService, ReplenishmentOrderService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<ICreditCardService, CreditCardService>();
 
 
 

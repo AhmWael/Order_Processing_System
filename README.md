@@ -25,14 +25,17 @@ The project uses **raw SQL** (no ORM), **Docker & Docker Compose**, **unit testi
 * Register, login, and manage account
 * Search books by title, ISBN, author, category, or publisher
 * Manage shopping cart (add, remove, view)
-* Checkout with credit card validation
+* Checkout with saved credit cards
+* Manage credit cards with AES-256 encryption
 * View past orders
 
 ### System Features
 
 * Raw SQL queries with integrity constraints
 * Triggers for automatic stock management
-* JWT-based authentication
+* JWT-based authentication with role-based authorization
+* AES-256-CBC encryption for sensitive data (credit cards)
+* Comprehensive admin reporting system
 * Dockerized backend, frontend, and database
 * CI/CD pipelines for automated build and deployment
 
@@ -53,37 +56,114 @@ The project uses **raw SQL** (no ORM), **Docker & Docker Compose**, **unit testi
 ## **File Structure**
 
 ```
-OrderProcessingSystem/
+Order_Processing_System/
 ├── backend/
 │   ├── Controllers/
+│   │   ├── AuthController.cs
+│   │   ├── AuthorsController.cs
+│   │   ├── BooksController.cs
+│   │   ├── CartController.cs
+│   │   ├── CreditCardsController.cs
+│   │   ├── PublishersController.cs
+│   │   ├── ReplenishmentOrdersController.cs
+│   │   ├── ReportsController.cs
+│   │   └── UsersController.cs
 │   ├── Services/
+│   │   ├── Author/
+│   │   ├── Book/
+│   │   ├── Cart/
+│   │   ├── CreditCard/
+│   │   │   ├── ICreditCardService.cs
+│   │   │   └── CreditCardService.cs
+│   │   ├── CustomerOrder/
+│   │   ├── Publisher/
+│   │   ├── Report/
+│   │   │   ├── IReportService.cs
+│   │   │   └── ReportService.cs
+│   │   ├── ReplenishmentOrder/
+│   │   ├── Seeders/
+│   │   └── User/
 │   ├── Repositories/
+│   │   ├── Author/
+│   │   ├── Book/
+│   │   ├── Cart/
+│   │   ├── CreditCard/
+│   │   │   ├── ICreditCardRepository.cs
+│   │   │   └── CreditCardRepository.cs
+│   │   ├── CustomerOrder/
+│   │   ├── Publisher/
+│   │   ├── Report/
+│   │   │   ├── IReportRepository.cs
+│   │   │   └── ReportRepository.cs
+│   │   ├── ReplenishmentOrder/
+│   │   └── User/
 │   ├── Migrations/
+│   │   ├── 001_InitialSchema.sql
+│   │   ├── 002_Triggers.sql
+│   │   └── MigrationRunner.cs
 │   ├── Models/
+│   │   ├── Authors.cs
+│   │   ├── Book.cs
+│   │   ├── Carts.cs
+│   │   ├── CreditCard.cs
+│   │   ├── CustomerOrders.cs
+│   │   ├── Publisher.cs
+│   │   ├── ReplenishmentOrder.cs
+│   │   └── User.cs
 │   ├── DTOs/
-│   ├── Utilities/
+│   │   ├── Author/
+│   │   ├── Book/
+│   │   ├── Cart/
+│   │   ├── CreditCard/
+│   │   │   └── CreditCardDTO.cs
+│   │   ├── CustomerOrders/
+│   │   ├── Publisher/
+│   │   ├── Report/
+│   │   │   └── ReportDTO.cs
+│   │   ├── ReplenishmentOrder/
+│   │   └── User/
+│   ├── Middleware/
+│   │   └── GlobalLogger.cs
+│   ├── openapi/
+│   │   └── openapi.json
+│   ├── Properties/
+│   │   └── launchSettings.json
 │   ├── appsettings.json
-│   ├── Program.cs
-│   └── Startup.cs
+│   ├── appsettings.Development.json
+│   ├── backend.csproj
+│   ├── backend.http
+│   └── Program.cs
 ├── frontend/
-│   ├── pages/
-│   ├── components/
+│   ├── app/
+│   │   ├── signup/
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
 │   ├── public/
-│   ├── styles/
+│   ├── eslint.config.mjs
+│   ├── next.config.ts
 │   ├── package.json
-│   └── next.config.js
+│   ├── postcss.config.mjs
+│   ├── tsconfig.json
+│   └── README.md
 ├── database/
-│   ├── schema.sql
-│   ├── seed.sql
-│   └── triggers.sql
+│   └── schema.sql
 ├── docs/
-│   └── openapi.yaml
-├── docker-compose.yml
-├── Dockerfile.backend
-├── Dockerfile.frontend
+│   ├── Contribution Guidelines & Conventions.md
+│   └── ERDdiagram.dot
 ├── tests/
-│   ├── backend/
-│   └── frontend/
+│   └── backend/
+│       ├── Controllers/
+│       ├── Services/
+│       ├── backend.Tests.csproj
+│       └── UnitTest1.cs
+├── compose.yaml
+├── docker-compose.override.yml
+├── Dockerfile.backend
+├── Dockerfile.backend.dev
+├── Dockerfile.frontend
+├── Order_Processing_System.sln
+├── package.json
 └── README.md
 ```
 
@@ -148,19 +228,30 @@ Sample ERD and relational schema are provided in `/database/schema.sql`.
 
 ### Shopping Cart
 
-| Method | Endpoint       | Description               |
-| ------ | -------------- | ------------------------- |
-| GET    | /api/cart      | Get customer cart         |
-| POST   | /api/cart      | Add item to cart          |
-| PUT    | /api/cart/{id} | Update cart item quantity |
-| DELETE | /api/cart/{id} | Remove item from cart     |
+| Method | Endpoint             | Description          |
+| ------ | -------------------- | -------------------- |
+| GET    | /api/cart            | Get customer cart    |
+| POST   | /api/cart/items      | Add item to cart     |
+| DELETE | /api/cart/items/{id} | Remove item from cart |
+| POST   | /api/cart/checkout   | Complete purchase    |
 
-### Sales / Checkout
+### Credit Cards
 
-| Method | Endpoint            | Description                    |
-| ------ | ------------------- | ------------------------------ |
-| POST   | /api/checkout       | Complete purchase              |
-| GET    | /api/orders/history | Get past orders for a customer |
+| Method | Endpoint                 | Description                    |
+| ------ | ------------------------ | ------------------------------ |
+| GET    | /api/credit-cards        | Get saved credit cards         |
+| POST   | /api/credit-cards        | Add new credit card (encrypted)|
+| DELETE | /api/credit-cards/{id}   | Delete credit card             |
+
+### Reports (Admin Only)
+
+| Method | Endpoint                                        | Description                      |
+| ------ | ----------------------------------------------- | -------------------------------- |
+| GET    | /api/reports/sales/previous-month               | Previous month total sales       |
+| GET    | /api/reports/sales/by-date?date={yyyy-MM-dd}    | Sales for specific date          |
+| GET    | /api/reports/customers/top-5                    | Top 5 customers (last 3 months)  |
+| GET    | /api/reports/books/top-10                       | Top 10 selling books (last 3 months)|
+| GET    | /api/reports/books/{isbn}/replenishment-orders  | Replenishment orders for book    |
 
 > For full OpenAPI documentation, see **[(OpenAPI YAML)](docs/openapi-schema.yaml)**  
 

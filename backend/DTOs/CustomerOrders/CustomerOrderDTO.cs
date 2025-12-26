@@ -2,8 +2,7 @@ namespace backend.DTOs;
 // Checkout
 public class CheckoutDto
 {
-    public string CreditCardNumber { get; set; }
-    public string Expiration { get; set; } // MM/YY
+    public Guid CardId { get; set; } // Credit card ID to use for checkout
 }
 
 // Orders

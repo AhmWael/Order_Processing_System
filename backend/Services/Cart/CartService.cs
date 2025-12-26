@@ -10,6 +10,7 @@ public interface ICartService
     Task AddItemAsync(Guid userId, CartItemDto dto);
     Task RemoveItemAsync(Guid userId, string isbn);
     Task CheckoutAsync(Guid userId, CheckoutDto dto);
+    Task<Guid> ClearCartForUserAsync(Guid userId);
 }
 
 public class CartService : ICartService
@@ -17,12 +18,14 @@ public class CartService : ICartService
     private readonly ICartRepository _cartRepo;
     private readonly ICustomerOrderRepository _orderRepo;
     private readonly IBookRepository _bookRepo;
+    private readonly ICreditCardService _cardService;
 
-    public CartService(ICartRepository cartRepo, ICustomerOrderRepository orderRepo, IBookRepository bookRepo)
+    public CartService(ICartRepository cartRepo, ICustomerOrderRepository orderRepo, IBookRepository bookRepo, ICreditCardService cardService)
     {
         _cartRepo = cartRepo;
         _orderRepo = orderRepo;
         _bookRepo = bookRepo;
+        _cardService = cardService;
     }
 
     public async Task<IEnumerable<CartItemResponseDto>> GetCartAsync(Guid userId)
@@ -52,10 +55,8 @@ public class CartService : ICartService
 
     public async Task CheckoutAsync(Guid userId, CheckoutDto dto)
     {
-        // Note: Credit card validation/storage is not yet implemented
-        // For now, we accept any non-empty credit card info
-        if (string.IsNullOrWhiteSpace(dto.CreditCardNumber) || string.IsNullOrWhiteSpace(dto.Expiration))
-            throw new Exception("Credit card information is required");
+        // Validate credit card
+        await _cardService.ValidateCardAsync(dto.CardId, userId);
 
         var cartId = await _cartRepo.GetCartIdAsync(userId);
         var items = (await _cartRepo.GetCartItemsAsync(cartId)).ToList();
@@ -81,5 +82,12 @@ public class CartService : ICartService
         }
 
         await _cartRepo.ClearCartAsync(cartId);
+    }
+
+    public async Task<Guid> ClearCartForUserAsync(Guid userId)
+    {
+        var cartId = await _cartRepo.GetCartIdAsync(userId);
+        await _cartRepo.ClearCartAsync(cartId);
+        return cartId;
     }
 }
