@@ -9,4 +9,5 @@ public interface IBookRepository
     Task CreateAsync(Book book, IEnumerable<Guid> authorIds);
     Task UpdateAsync(Book book, IEnumerable<Guid> authorIds);
     Task DeleteAsync(string isbn);
+    Task UpdateStockAsync(string isbn, int quantityChange);
 }

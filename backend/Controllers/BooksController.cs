@@ -7,7 +7,6 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("api/books")]
-[AllowAnonymous] // remove after testing
 public class BooksController : ControllerBase
 {
     private readonly IBookService _service;
