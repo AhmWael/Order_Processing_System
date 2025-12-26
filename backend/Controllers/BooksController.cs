@@ -34,7 +34,7 @@ public class BooksController : ControllerBase
     }
 
     // POST /api/books
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] BookCreateDto dto)
     {

@@ -178,4 +178,14 @@ public class BookRepository : IBookRepository
             throw;
         }
     }
+
+    public async Task UpdateStockAsync(string isbn, int quantityChange)
+    {
+        const string sql = @"
+            UPDATE book 
+            SET stock = stock + @QuantityChange 
+            WHERE isbn = @Isbn;
+        ";
+        await _db.ExecuteAsync(sql, new { Isbn = isbn, QuantityChange = quantityChange });
+    }
 }
