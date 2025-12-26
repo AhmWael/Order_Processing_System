@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using Microsoft.VisualBasic;
 using Scalar.AspNetCore;
+using backend.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -37,15 +38,21 @@ builder.Services.AddScoped<IDbConnection>(sp =>
 
 
 // DI bindings
+// Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
+builder.Services.AddScoped<IReplenishmentOrderRepository, ReplenishmentOrderRepository>();
 
+// Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IPublisherService, PublisherService>();
+builder.Services.AddScoped<IReplenishmentOrderService, ReplenishmentOrderService>();
+
+
 
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
@@ -121,6 +128,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+// Global logging middleware
+app.UseMiddleware<GlobalRequestLoggingMiddleware>();
 app.MapControllers();
 
 app.MapGet("/", () => "Hello World!");
