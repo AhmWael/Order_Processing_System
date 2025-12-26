@@ -14,36 +14,69 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
-
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 export default function HomePage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
+  const [error, setError] = useState("");
   useEffect(() => {
-    // Check if user is logged in
-    const checkAuth = () => {
-      // TODO: Replace with actual auth check (cookies, tokens, etc.)
-      const token = localStorage.getItem("token");
-      const userRole = localStorage.getItem("userRole");
-
-      if (token) {
-        // Redirect based on user role
-        if (userRole === "admin") {
-          router.push("/admin/home");
-        } else {
-          router.push("/home");
-        }
-      }
-    };
-    checkAuth();
+    const token = localStorage.getItem("token");
+    if (token) {
+      router.push("/user/home");
+    }
   }, [router]);
+  
 
-  function handleSubmit() {
+  async function handleSubmit() {
+    setError("");
     if (!username || !password) {
-      alert("Please enter username and password");
+      setError("Please enter username and password");
       return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Login: username, Password: password }),
+      });
+
+      if (!res.ok) {
+        let errorMessage = "Invalid username or password";
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorData.title || errorMessage;
+        } catch (parseError) {
+          // If response is not JSON, use status text
+          errorMessage = res.statusText || `Server error (${res.status})`;
+        }
+        setError(errorMessage);
+        return;
+      }
+
+      const data = await res.json();
+      if (!data.accessToken) {
+        setError("Invalid response from server. Missing access token.");
+        return;
+      }
+
+      localStorage.setItem("token", data.accessToken);
+      router.push("/user/home");
+    } catch (err: any) {
+      console.error("Login error:", err);
+
+      // Handle network errors
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        setError(
+          "Cannot connect to server. Please check if the backend is running on http://localhost:8080"
+        );
+      } else if (err instanceof SyntaxError) {
+        setError("Invalid response from server. Please try again.");
+      } else {
+        setError(err.message || "Something went wrong. Please try again.");
+      }
     }
   }
 
@@ -64,6 +97,7 @@ export default function HomePage() {
                 id="Username"
                 className="text-gray-400"
                 type="text"
+                value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
@@ -86,7 +120,9 @@ export default function HomePage() {
                 className="text-gray-400"
                 id="password"
                 type="password"
+                value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                 required
               />
             </div>
@@ -94,9 +130,15 @@ export default function HomePage() {
         </CardContent>
 
         <CardFooter className="flex-col gap-2">
+          {error && (
+            <Alert className="p-2 bg-gray-700" variant="destructive">
+              <AlertCircle />
+              <AlertTitle>{error}</AlertTitle>
+            </Alert>
+          )}
           <Button
+            type="button"
             onClick={handleSubmit}
-            type="submit"
             className="cursor-pointer w-full"
           >
             Login
