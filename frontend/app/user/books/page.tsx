@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,23 @@ import { booksApi, Book } from "@/lib/api";
 import { Book as BookIcon } from "lucide-react";
 import BookCard from "@/components/BookCard";
 import SearchBar from "@/components/SearchBar";
+import SearchFilters, { FilterState } from "@/components/SearchFilters";
 
 function BooksPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
+  const searchQuery = searchParams.get("q") || "";
 
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [filters, setFilters] = useState<FilterState>({
+    category: category || "",
+    author: "",
+    minPrice: "",
+    maxPrice: "",
+  });
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -33,17 +41,32 @@ function BooksPageContent() {
     loadBooks();
   }, [router, category]);
 
+  useEffect(() => {
+    // Update category filter when URL category changes
+    if (category) {
+      setFilters(prev => ({ ...prev, category: category.toLowerCase() }));
+    } else {
+      setFilters(prev => ({ ...prev, category: "" }));
+    }
+  }, [category]);
+
+  useEffect(() => {
+    if (allBooks.length > 0) {
+      applyFilters(allBooks, filters, searchQuery);
+    }
+  }, [allBooks, filters, searchQuery]);
+
   const loadBooks = async () => {
     try {
       setLoading(true);
-      const response = await booksApi.getAll(category || undefined);
+      const response = await booksApi.getAll();
       if (response.data) {
         // Remove duplicates by ISBN
         const uniqueBooks = Array.from(
           new Map(response.data.map(book => [book.isbn, book])).values()
         );
-        setBooks(uniqueBooks);
         setAllBooks(uniqueBooks);
+        applyFilters(uniqueBooks, filters, searchQuery);
       }
     } catch (error) {
       console.error("Failed to load books:", error);
@@ -51,6 +74,71 @@ function BooksPageContent() {
       setLoading(false);
     }
   };
+
+  const applyFilters = (booksToFilter: Book[], currentFilters: FilterState, searchTerm: string) => {
+    setLoading(true);
+    let filtered = booksToFilter;
+
+    // Apply URL category filter (from query param)
+    if (category) {
+      filtered = filtered.filter(book => 
+        book.category.toLowerCase() === category.toLowerCase()
+      );
+    }
+
+    // Apply search query filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(book => {
+        const titleMatch = book.title.toLowerCase().includes(term);
+        const authorMatch = book.authors?.some(author => 
+          author.toLowerCase().includes(term)
+        );
+        const categoryMatch = book.category.toLowerCase().includes(term);
+        const isbnMatch = book.isbn.toLowerCase().includes(term);
+        
+        return titleMatch || authorMatch || categoryMatch || isbnMatch;
+      });
+    }
+
+    // Apply category filter from filters
+    if (currentFilters.category) {
+      filtered = filtered.filter(book => 
+        book.category.toLowerCase() === currentFilters.category.toLowerCase()
+      );
+    }
+
+    // Apply author filter
+    if (currentFilters.author) {
+      filtered = filtered.filter(book => 
+        book.authors?.some(author => 
+          author.toLowerCase() === currentFilters.author.toLowerCase()
+        )
+      );
+    }
+
+    // Apply price filters
+    if (currentFilters.minPrice) {
+      const minPrice = parseFloat(currentFilters.minPrice);
+      if (!isNaN(minPrice)) {
+        filtered = filtered.filter(book => book.price >= minPrice);
+      }
+    }
+
+    if (currentFilters.maxPrice) {
+      const maxPrice = parseFloat(currentFilters.maxPrice);
+      if (!isNaN(maxPrice)) {
+        filtered = filtered.filter(book => book.price <= maxPrice);
+      }
+    }
+
+    setBooks(filtered);
+    setLoading(false);
+  };
+
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
+    setFilters(newFilters);
+  }, []);
 
   const handleAddToCart = () => {
     // Cart count will be updated by the BookCard component
@@ -71,8 +159,15 @@ function BooksPageContent() {
             View All Books
           </Button>
         )}
-        <div className="max-w-2xl">
-          <SearchBar />
+        
+        {/* Search Bar and Filters */}
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center mb-6">
+          <div className="flex-1 w-full lg:max-w-2xl">
+            <SearchBar />
+          </div>
+          <div className="w-full lg:w-auto lg:flex-shrink-0">
+            <SearchFilters onFilterChange={handleFilterChange} allBooks={allBooks} />
+          </div>
         </div>
       </div>
 

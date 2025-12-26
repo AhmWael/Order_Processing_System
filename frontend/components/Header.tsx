@@ -126,10 +126,10 @@ const Header = () => {
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="relative">
+                        <div className="relative inline-flex items-center justify-center">
                           <ShoppingCart className="h-4 w-4" />
                           {cartCount > 0 && (
-                            <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                            <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center leading-none">
                               {cartCount > 99 ? "99+" : cartCount}
                             </span>
                           )}

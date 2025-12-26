@@ -3,26 +3,21 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardFooter,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Book, UserPlus, Eye, EyeOff, Loader2, Mail, Phone, MapPin, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { isAuthenticated, getCurrentUser } from "@/lib/auth";
 
 export default function SignupPage() {
-  const fieldClassName =
-    "bg-indigo-300 ring-indigo-600 ring-1 text-indigo-950 text-center rounded-xl";
-
-  const buttonClassName =
-    "text-violet-400 rounded-xl bg-indigo-800 hover:bg-indigo-900 transition px-5 py-4 text-center";
+  const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -32,19 +27,39 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
-  async function handleSubmit() {
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const user = getCurrentUser();
+      if (user) {
+        router.push("/user/home");
+      }
+    }
+  }, [router]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setError("");
+    
     if (!username || !password || !firstName || !lastName || !email || !address) {
-      setError("Please enter all required fields");
+      setError("Please fill in all required fields");
       return;
     }
+    
     if (password !== rePassword) {
       setError("Passwords do not match");
       return;
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await fetch("http://localhost:8080/api/auth/register", {
         method: "POST",
@@ -64,7 +79,6 @@ export default function SignupPage() {
         let errorMessage = "Registration failed";
         try {
           const errorData = await res.json();
-          // Handle ASP.NET Core validation errors
           if (errorData.errors) {
             const errors = Object.values(errorData.errors).flat();
             errorMessage = errors.join(", ");
@@ -87,146 +101,221 @@ export default function SignupPage() {
     } catch (err) {
       setError("An error occurred during registration. Please try again.");
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   }
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      router.push("/user/home");
-    }
-  }, [router]);
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-gray-900">
-      <Card className="bg-black w-full max-w-md ">
-        <CardHeader>
-          <CardTitle className="text-gray-500">Create an account</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="Username" className="text-gray-500">
-                  Username
-                </Label>
-                <Input
-                  id="Username"
-                  className="text-gray-400"
-                  type="text"
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="flex flex-row gap-8">
-                <div className="grid gap-2">
-                  <Label htmlFor="Firstname" className="text-gray-500">
-                    First Name
-                  </Label>
-                  <Input
-                    id="Firstname"
-                    className="text-gray-400"
-                    type="text"
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="Lastname" className="text-gray-500">
-                    Last Name
-                  </Label>
-                  <Input
-                    id="Lastname"
-                    className="text-gray-400"
-                    type="text"
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex flex-row gap-8">
-                <div className="grid gap-2">
-                  <div className="flex items-center">
-                    <Label className="text-gray-500" htmlFor="password">
-                      Password
-                    </Label>
-                  </div>
-                  <Input
-                    className="text-gray-400"
-                    id="password"
-                    type="password"
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <div className="flex items-center">
-                    <Label className="text-gray-500" htmlFor="re-password">
-                      Re-enter Password
-                    </Label>
-                  </div>
-                  <Input
-                    className="text-gray-400"
-                    id="re-password"
-                    type="password"
-                    onChange={(e) => setRePassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="Email" className="text-gray-500">
-                  Email
-                </Label>
-                <Input
-                  className="text-gray-400"
-                  placeholder="x@example.com"
-                  id="Email"
-                  type="Email"
-                  pattern = "[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="Address" className="text-gray-500">
-                  Address
-                </Label>
-                <Input
-                  className="text-gray-400"
-                  id="Address"
-                  type="text"
-                  onChange={(e) => setAddress(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="Phone" className="text-gray-500">
-                  Phone
-                </Label>
-                <Input
-                  className="text-gray-400"
-                  id="Phone"
-                  type="text"
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </div>              
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4 py-8">
+      <div className="w-full max-w-2xl">
+        {/* Logo and Welcome */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <Book className="h-8 w-8 text-primary" />
             </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex-col gap-2">
-          {error && (
-            <Alert variant="destructive" className="w-full">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <Button onClick={handleSubmit} className="w-full">
-            Register
-          </Button>
-        </CardFooter>
-      </Card>
+            <h1 className="text-3xl font-bold">BookStore</h1>
+          </div>
+          <p className="text-muted-foreground">Create a new account to start shopping for books</p>
+        </div>
+
+        <Card className="border-2 shadow-lg">
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
+            <CardDescription className="text-center">
+              Fill in your information to create your account
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Username */}
+              <div className="space-y-2">
+                <Label htmlFor="username">Username *</Label>
+                <div className="relative">
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Choose a username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    disabled={loading}
+                    className="pl-10"
+                    required
+                  />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+
+              {/* First Name and Last Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john.doe@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    className="pl-10"
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                    required
+                  />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+
+              {/* Password Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password *</Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    </button>
+                  </div>
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="At least 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="rePassword">Confirm Password *</Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowRePassword(!showRePassword)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      {showRePassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    </button>
+                  </div>
+                  <Input
+                    id="rePassword"
+                    type={showRePassword ? "text" : "password"}
+                    placeholder="Re-enter password"
+                    value={rePassword}
+                    onChange={(e) => setRePassword(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Address */}
+              <div className="space-y-2">
+                <Label htmlFor="address">Shipping Address *</Label>
+                <div className="relative">
+                  <Input
+                    id="address"
+                    type="text"
+                    placeholder="123 Main St, City, State, ZIP"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    disabled={loading}
+                    className="pl-10"
+                    required
+                  />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="relative">
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={loading}
+                    className="pl-10"
+                  />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground">Optional</p>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Create Account
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center text-sm">
+              <span className="text-muted-foreground">Already have an account? </span>
+              <Link
+                href="/"
+                className="font-medium text-primary hover:underline"
+              >
+                Sign in
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

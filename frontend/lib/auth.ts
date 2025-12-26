@@ -66,3 +66,4 @@ export function hasRole(role: string): boolean {
   return user?.role === role;
 }
 
+

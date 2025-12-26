@@ -70,11 +70,31 @@ export default function FilterDropdown({ type, label }: FilterDropdownProps) {
     }
   };
 
+  const [closeTimeout, setCloseTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (closeTimeout) {
+      clearTimeout(closeTimeout);
+      setCloseTimeout(null);
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    const timeout = setTimeout(() => {
+      setIsOpen(false);
+    }, 150); // Small delay to allow moving to dropdown
+    setCloseTimeout(timeout);
+  };
+
   return (
-    <div ref={dropdownRef} className="relative">
+    <div 
+      ref={dropdownRef} 
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
         className="flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary"
       >
         {label}
@@ -83,9 +103,7 @@ export default function FilterDropdown({ type, label }: FilterDropdownProps) {
 
       {isOpen && (
         <div
-          onMouseEnter={() => setIsOpen(true)}
-          onMouseLeave={() => setIsOpen(false)}
-          className="absolute top-full left-0 mt-2 w-48 bg-background border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+          className="absolute top-full left-0 mt-1 w-48 bg-background border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
         >
           {loading ? (
             <div className="p-4 text-center text-sm text-muted-foreground">

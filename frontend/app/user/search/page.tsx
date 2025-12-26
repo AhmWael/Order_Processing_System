@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { booksApi, Book } from "@/lib/api";
 import { Book as BookIcon } from "lucide-react";
 import BookCard from "@/components/BookCard";
 import SearchBar from "@/components/SearchBar";
+import SearchFilters, { FilterState } from "@/components/SearchFilters";
 
 function SearchResultsContent() {
   const router = useRouter();
@@ -17,6 +18,12 @@ function SearchResultsContent() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [filters, setFilters] = useState<FilterState>({
+    category: "",
+    author: "",
+    minPrice: "",
+    maxPrice: "",
+  });
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -34,10 +41,10 @@ function SearchResultsContent() {
   }, [router]);
 
   useEffect(() => {
-    if (allBooks.length > 0 && query) {
-      filterBooks(query);
+    if (allBooks.length > 0) {
+      filterBooks(query, allBooks, filters);
     }
-  }, [query, allBooks]);
+  }, [query, allBooks, filters]);
 
   const loadAllBooks = async () => {
     try {
@@ -48,11 +55,7 @@ function SearchResultsContent() {
           new Map(response.data.map(book => [book.isbn, book])).values()
         );
         setAllBooks(uniqueBooks);
-        if (query) {
-          filterBooks(query, uniqueBooks);
-        } else {
-          setLoading(false);
-        }
+        filterBooks(query, uniqueBooks, filters);
       }
     } catch (error) {
       console.error("Failed to load books:", error);
@@ -60,24 +63,64 @@ function SearchResultsContent() {
     }
   };
 
-  const filterBooks = (searchQuery: string, booksToFilter = allBooks) => {
+  const filterBooks = (searchQuery: string, booksToFilter: Book[], currentFilters: FilterState) => {
     setLoading(true);
     const searchTerm = searchQuery.toLowerCase().trim();
     
-    const filtered = booksToFilter.filter(book => {
-      const titleMatch = book.title.toLowerCase().includes(searchTerm);
-      const authorMatch = book.authors?.some(author => 
-        author.toLowerCase().includes(searchTerm)
+    let filtered = booksToFilter;
+
+    // Apply search query filter
+    if (searchTerm) {
+      filtered = filtered.filter(book => {
+        const titleMatch = book.title.toLowerCase().includes(searchTerm);
+        const authorMatch = book.authors?.some(author => 
+          author.toLowerCase().includes(searchTerm)
+        );
+        const categoryMatch = book.category.toLowerCase().includes(searchTerm);
+        const isbnMatch = book.isbn.toLowerCase().includes(searchTerm);
+        
+        return titleMatch || authorMatch || categoryMatch || isbnMatch;
+      });
+    }
+
+    // Apply category filter
+    if (currentFilters.category) {
+      filtered = filtered.filter(book => 
+        book.category.toLowerCase() === currentFilters.category.toLowerCase()
       );
-      const categoryMatch = book.category.toLowerCase().includes(searchTerm);
-      const isbnMatch = book.isbn.toLowerCase().includes(searchTerm);
-      
-      return titleMatch || authorMatch || categoryMatch || isbnMatch;
-    });
+    }
+
+    // Apply author filter
+    if (currentFilters.author) {
+      filtered = filtered.filter(book => 
+        book.authors?.some(author => 
+          author.toLowerCase() === currentFilters.author.toLowerCase()
+        )
+      );
+    }
+
+    // Apply price filters
+    if (currentFilters.minPrice) {
+      const minPrice = parseFloat(currentFilters.minPrice);
+      if (!isNaN(minPrice)) {
+        filtered = filtered.filter(book => book.price >= minPrice);
+      }
+    }
+
+    if (currentFilters.maxPrice) {
+      const maxPrice = parseFloat(currentFilters.maxPrice);
+      if (!isNaN(maxPrice)) {
+        filtered = filtered.filter(book => book.price <= maxPrice);
+      }
+    }
 
     setBooks(filtered);
     setLoading(false);
   };
+
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
+    setFilters(newFilters);
+  }, []);
 
   const handleAddToCart = () => {
     // Cart count will be updated by the BookCard component
@@ -92,10 +135,13 @@ function SearchResultsContent() {
         </div>
       </div>
 
-      {query && (
+      <SearchFilters onFilterChange={handleFilterChange} allBooks={allBooks} />
+
+      {(query || filters.category || filters.author || filters.minPrice || filters.maxPrice) && (
         <div className="mb-6">
           <p className="text-muted-foreground">
-            {loading ? "Searching..." : `Found ${books.length} result${books.length !== 1 ? "s" : ""} for "${query}"`}
+            {loading ? "Searching..." : `Found ${books.length} result${books.length !== 1 ? "s" : ""}`}
+            {query && ` for "${query}"`}
           </p>
         </div>
       )}
@@ -156,4 +202,3 @@ export default function SearchResultsPage() {
     </Suspense>
   );
 }
-
