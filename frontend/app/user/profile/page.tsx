@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { isAuthenticated, getCurrentUser } from "@/lib/auth";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, creditCardsApi, CreditCard, CreditCardAddDto } from "@/lib/api";
 import {
   ArrowLeft,
   User,
@@ -25,6 +25,10 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  CreditCard as CreditCardIcon,
+  Plus,
+  X,
+  Trash2,
 } from "lucide-react";
 
 interface UserProfile {
@@ -52,6 +56,20 @@ export default function ProfilePage() {
     phone: "",
     address: "",
   });
+  
+  // Credit card management state
+  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [loadingCards, setLoadingCards] = useState(false);
+  const [showAddCard, setShowAddCard] = useState(false);
+  const [addingCard, setAddingCard] = useState(false);
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
+  const [newCard, setNewCard] = useState({
+    cardNumber: "",
+    cardholderName: "",
+    expirationDate: "",
+  });
+  const [cardError, setCardError] = useState("");
+  const [cardSuccess, setCardSuccess] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -66,6 +84,7 @@ export default function ProfilePage() {
     }
 
     loadProfile();
+    loadCreditCards();
   }, [router]);
 
   const loadProfile = async () => {
@@ -92,6 +111,111 @@ export default function ProfilePage() {
       setError("Failed to load profile");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCreditCards = async () => {
+    try {
+      setLoadingCards(true);
+      const response = await creditCardsApi.getAll();
+      if (response.data) {
+        setCreditCards(response.data);
+      } else if (response.error) {
+        setCardError("Failed to load credit cards: " + response.error);
+      }
+    } catch (error) {
+      console.error("Failed to load credit cards:", error);
+      setCardError("Failed to load credit cards");
+    } finally {
+      setLoadingCards(false);
+    }
+  };
+
+  const formatCardNumber = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    const formatted = digits.match(/.{1,4}/g)?.join(" ") || digits;
+    return formatted.slice(0, 19);
+  };
+
+  const formatExpirationDate = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (digits.length >= 2) {
+      return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
+    }
+    return digits;
+  };
+
+  const handleAddCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCardError("");
+    setCardSuccess("");
+
+    if (!newCard.cardNumber || !newCard.cardholderName || !newCard.expirationDate) {
+      setCardError("Please fill in all fields");
+      return;
+    }
+
+    const expDateRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
+    if (!expDateRegex.test(newCard.expirationDate)) {
+      setCardError("Expiration date must be in MM/YY format (e.g., 12/25)");
+      return;
+    }
+
+    setAddingCard(true);
+    try {
+      const cardData: CreditCardAddDto = {
+        cardNumber: newCard.cardNumber.replace(/\s/g, ""),
+        cardholderName: newCard.cardholderName,
+        expirationDate: newCard.expirationDate,
+      };
+
+      const response = await creditCardsApi.addCard(cardData);
+
+      if (response.error) {
+        setCardError(response.error);
+      } else {
+        setCardSuccess("Credit card added successfully!");
+        setNewCard({
+          cardNumber: "",
+          cardholderName: "",
+          expirationDate: "",
+        });
+        setShowAddCard(false);
+        await loadCreditCards();
+        // Clear success message after 3 seconds
+        setTimeout(() => setCardSuccess(""), 3000);
+      }
+    } catch (error: any) {
+      setCardError("Failed to add credit card: " + (error.message || "Unknown error"));
+    } finally {
+      setAddingCard(false);
+    }
+  };
+
+  const handleDeleteCard = async (cardId: string) => {
+    if (!confirm("Are you sure you want to delete this credit card?")) {
+      return;
+    }
+
+    setDeletingCardId(cardId);
+    setCardError("");
+    setCardSuccess("");
+
+    try {
+      const response = await creditCardsApi.deleteCard(cardId);
+
+      if (response.error) {
+        setCardError(response.error);
+      } else {
+        setCardSuccess("Credit card deleted successfully!");
+        await loadCreditCards();
+        // Clear success message after 3 seconds
+        setTimeout(() => setCardSuccess(""), 3000);
+      }
+    } catch (error: any) {
+      setCardError("Failed to delete credit card: " + (error.message || "Unknown error"));
+    } finally {
+      setDeletingCardId(null);
     }
   };
 
@@ -328,6 +452,224 @@ export default function ProfilePage() {
               </Link>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Credit Cards Section */}
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCardIcon className="h-5 w-5" />
+                Credit Cards
+              </CardTitle>
+              <CardDescription>
+                Manage your saved credit cards for quick checkout
+              </CardDescription>
+            </div>
+            {!showAddCard && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowAddCard(true);
+                  setCardError("");
+                  setCardSuccess("");
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Card
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {cardError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{cardError}</AlertDescription>
+            </Alert>
+          )}
+
+          {cardSuccess && (
+            <Alert className="bg-green-50 border-green-200 mb-4">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">{cardSuccess}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Add Credit Card Form */}
+          {showAddCard && (
+            <Card className="mb-4 border-primary/20 bg-primary/5">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Add New Credit Card</CardTitle>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setShowAddCard(false);
+                      setNewCard({ cardNumber: "", cardholderName: "", expirationDate: "" });
+                      setCardError("");
+                      setCardSuccess("");
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddCard} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cardNumber">Card Number</Label>
+                    <Input
+                      id="cardNumber"
+                      type="text"
+                      placeholder="1234 5678 9012 3456"
+                      value={newCard.cardNumber}
+                      onChange={(e) =>
+                        setNewCard({ ...newCard, cardNumber: formatCardNumber(e.target.value) })
+                      }
+                      disabled={addingCard}
+                      maxLength={19}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cardholderName">Cardholder Name</Label>
+                    <Input
+                      id="cardholderName"
+                      type="text"
+                      placeholder="John Doe"
+                      value={newCard.cardholderName}
+                      onChange={(e) =>
+                        setNewCard({ ...newCard, cardholderName: e.target.value })
+                      }
+                      disabled={addingCard}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="expirationDate">Expiration Date</Label>
+                    <Input
+                      id="expirationDate"
+                      type="text"
+                      placeholder="MM/YY"
+                      value={newCard.expirationDate}
+                      onChange={(e) =>
+                        setNewCard({ ...newCard, expirationDate: formatExpirationDate(e.target.value) })
+                      }
+                      disabled={addingCard}
+                      maxLength={5}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Format: MM/YY (e.g., 12/25)
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button type="submit" disabled={addingCard} className="flex-1">
+                      {addingCard ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Card
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowAddCard(false);
+                        setNewCard({ cardNumber: "", cardholderName: "", expirationDate: "" });
+                        setCardError("");
+                        setCardSuccess("");
+                      }}
+                      disabled={addingCard}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Credit Cards List */}
+          {loadingCards ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : creditCards.length === 0 && !showAddCard ? (
+            <div className="text-center py-8">
+              <CreditCardIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">
+                You don't have any saved credit cards.
+              </p>
+              <Button variant="outline" onClick={() => setShowAddCard(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Credit Card
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {creditCards.map((card) => (
+                <div
+                  key={card.cardId}
+                  className={`flex items-center justify-between p-4 border rounded-lg ${
+                    card.isExpired ? "opacity-60 bg-muted/50" : "bg-card"
+                  }`}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <CreditCardIcon className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold">{card.cardholderName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            •••• •••• •••• {card.last4}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">
+                            Expires: {card.expirationDate}
+                          </p>
+                          {card.isExpired && (
+                            <p className="text-xs text-destructive font-medium">Expired</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteCard(card.cardId)}
+                    disabled={deletingCardId === card.cardId}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    {deletingCardId === card.cardId ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
