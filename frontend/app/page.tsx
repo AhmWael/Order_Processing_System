@@ -4,38 +4,50 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardFooter,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Book, LogIn, Eye, EyeOff, Loader2 } from "lucide-react";
+import { isAuthenticated, getCurrentUser } from "@/lib/auth";
+
 export default function HomePage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      router.push("/user/home");
+    // Check if user is authenticated and redirect based on role
+    if (isAuthenticated()) {
+      const user = getCurrentUser();
+      if (user) {
+        if (user.role === "Customer") {
+          router.push("/user/home");
+        } else if (user.role === "Admin") {
+          router.push("/admin/home");
+        }
+      }
     }
   }, [router]);
-  
 
-  async function handleSubmit() {
+  async function handleSubmit(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    
     setError("");
     if (!username || !password) {
-      setError("Please enter username and password");
+      setError("Please enter both username and password");
       return;
     }
 
+    setLoading(true);
     try {
       const res = await fetch("http://localhost:8080/api/auth/login", {
         method: "POST",
@@ -49,7 +61,6 @@ export default function HomePage() {
           const errorData = await res.json();
           errorMessage = errorData.message || errorData.title || errorMessage;
         } catch (parseError) {
-          // If response is not JSON, use status text
           errorMessage = res.statusText || `Server error (${res.status})`;
         }
         setError(errorMessage);
@@ -63,11 +74,14 @@ export default function HomePage() {
       }
 
       localStorage.setItem("token", data.accessToken);
-      router.push("/user/home");
+      const user = getCurrentUser();
+      if (user?.role === "Admin") {
+        router.push("/admin/home");
+      } else {
+        router.push("/user/home");
+      }
     } catch (err: any) {
       console.error("Login error:", err);
-
-      // Handle network errors
       if (err instanceof TypeError && err.message.includes("fetch")) {
         setError(
           "Cannot connect to server. Please check if the backend is running on http://localhost:8080"
@@ -77,80 +91,156 @@ export default function HomePage() {
       } else {
         setError(err.message || "Something went wrong. Please try again.");
       }
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-gray-900">
-      <Card className="bg-black w-full max-w-sm ">
-        <CardHeader>
-          <CardTitle className="text-gray-500">Login to your account</CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          <div className="flex flex-col gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="Username" className="text-gray-500">
-                Username
-              </Label>
-              <Input
-                id="Username"
-                className="text-gray-400"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
+      <div className="w-full max-w-md">
+        {/* Logo and Welcome */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <Book className="h-8 w-8 text-primary" />
             </div>
+            <h1 className="text-3xl font-bold">BookStore</h1>
+          </div>
+          <p className="text-muted-foreground">Welcome back! Please sign in to continue.</p>
+        </div>
 
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label className="text-gray-500" htmlFor="password">
-                  Password
-                </Label>
-                <a
-                  href="#"
-                  className="text-gray-500 ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot your password?
-                </a>
+        <Card className="border-2 shadow-lg">
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+            <CardDescription className="text-center">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <div className="relative">
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    disabled={loading}
+                    className="pl-10"
+                    required
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
-              <Input
-                className="text-gray-400"
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                required
-              />
-            </div>
-          </div>
-        </CardContent>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? (
+                      <span className="flex items-center gap-1">
+                        <EyeOff className="h-4 w-4" /> Hide
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-4 w-4" /> Show
+                      </span>
+                    )}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !loading && handleSubmit()}
+                    disabled={loading}
+                    className="pl-10 pr-10"
+                    required
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
 
-        <CardFooter className="flex-col gap-2">
-          {error && (
-            <Alert className="p-2 bg-gray-700" variant="destructive">
-              <AlertCircle />
-              <AlertTitle>{error}</AlertTitle>
-            </Alert>
-          )}
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            className="cursor-pointer w-full"
-          >
-            Login
-          </Button>
-          <a
-            href="/signup"
-            className="text-gray-500 text-left text-sm underline-offset-4 hover:underline"
-          >
-            Sign Up
-          </a>
-        </CardFooter>
-      </Card>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center text-sm">
+              <span className="text-muted-foreground">Don't have an account? </span>
+              <Link
+                href="/signup"
+                className="font-medium text-primary hover:underline"
+              >
+                Sign up
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
