@@ -22,9 +22,9 @@ export async function apiRequest<T>(
 ): Promise<ApiResponse<T>> {
   const token = getToken();
   
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options.headers,
+    ...(options.headers as Record<string, string> || {}),
   };
 
   if (token) {
@@ -69,6 +69,20 @@ export const booksApi = {
     return apiRequest<Book[]>(`/books${query}`);
   },
   getByIsbn: (isbn: string) => apiRequest<Book>(`/books/${isbn}`),
+  create: (bookData: BookCreateDto) =>
+    apiRequest(`/books`, {
+      method: "POST",
+      body: JSON.stringify(bookData),
+    }),
+  update: (isbn: string, bookData: BookUpdateDto) =>
+    apiRequest(`/books/${isbn}`, {
+      method: "PUT",
+      body: JSON.stringify(bookData),
+    }),
+  delete: (isbn: string) =>
+    apiRequest(`/books/${isbn}`, {
+      method: "DELETE",
+    }),
 };
 
 // Cart API
@@ -165,4 +179,129 @@ export interface CustomerOrder {
   totalPrice: number;
   items?: CustomerOrderItem[];
 }
+
+// Admin API - Books
+export interface BookCreateDto {
+  isbn: string;
+  title: string;
+  pubId: string;
+  pubYear?: number;
+  price: number;
+  category: string;
+  stock: number;
+  threshold: number;
+  authorIds: string[];
+}
+
+export interface BookUpdateDto {
+  title: string;
+  pubId: string;
+  pubYear?: number;
+  price: number;
+  category: string;
+  stock: number;
+  threshold: number;
+  authorIds: string[];
+}
+
+// Admin API - Authors
+export interface Author {
+  authorId: string;
+  authorName: string;
+}
+
+export interface AuthorCreateDto {
+  authorName: string;
+}
+
+export const authorsApi = {
+  getAll: () => apiRequest<Author[]>(`/authors`),
+  create: (authorData: AuthorCreateDto) =>
+    apiRequest(`/authors`, {
+      method: "POST",
+      body: JSON.stringify(authorData),
+    }),
+};
+
+// Admin API - Publishers
+export interface Publisher {
+  pubId: string;
+  publisherName: string;
+  address?: string;
+}
+
+export interface PublisherCreateDto {
+  publisherName: string;
+  address?: string;
+  phones?: string[];
+}
+
+export const publishersApi = {
+  getAll: () => apiRequest<Publisher[]>(`/publishers`),
+  create: (publisherData: PublisherCreateDto) =>
+    apiRequest(`/publishers`, {
+      method: "POST",
+      body: JSON.stringify(publisherData),
+    }),
+};
+
+// Admin API - Replenishment Orders
+export interface ReplenishmentOrder {
+  orderId: string;
+  isbn: string;
+  orderDate: string;
+  quantity: number;
+  status: string;
+}
+
+export const replenishmentOrdersApi = {
+  getAll: () => apiRequest<ReplenishmentOrder[]>(`/replenishment-orders`),
+  confirm: (orderId: string) =>
+    apiRequest(`/replenishment-orders/${orderId}/confirm`, {
+      method: "PUT",
+    }),
+};
+
+// Admin API - Reports
+export interface TotalSales {
+  totalSales: number;
+  totalOrders: number;
+  totalBooksSold: number;
+}
+
+export interface TopCustomer {
+  userId: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  totalPurchaseAmount: number;
+  totalOrders: number;
+}
+
+export interface TopSellingBook {
+  isbn: string;
+  title: string;
+  totalCopiesSold: number;
+  totalRevenue: number;
+  timesOrdered: number;
+}
+
+export interface BookOrderCount {
+  isbn: string;
+  title: string;
+  replenishmentOrderCount: number;
+  totalQuantityOrdered: number;
+}
+
+export const reportsApi = {
+  getSalesPreviousMonth: () =>
+    apiRequest<TotalSales>(`/reports/sales/previous-month`),
+  getSalesByDate: (date: string) =>
+    apiRequest<TotalSales>(`/reports/sales/by-date?date=${date}`),
+  getTop5Customers: () => apiRequest<TopCustomer[]>(`/reports/customers/top-5`),
+  getTop10Books: () => apiRequest<TopSellingBook[]>(`/reports/books/top-10`),
+  getBookReplenishmentOrderCount: (isbn: string) =>
+    apiRequest<BookOrderCount>(`/reports/books/${isbn}/replenishment-orders`),
+};
 
