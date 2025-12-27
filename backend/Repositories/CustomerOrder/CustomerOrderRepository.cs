@@ -27,7 +27,12 @@ public class CustomerOrderRepository : ICustomerOrderRepository
 
     public async Task<IEnumerable<CustomerOrder>> GetOrdersAsync(Guid userId)
     {
-        const string sql = @"SELECT * FROM customer_order WHERE u_id = @UserId ORDER BY order_date DESC;";
+        const string sql = @"
+            SELECT order_id as OrderId, u_id as UserId, order_date::timestamp as OrderDate, total_price as TotalPrice 
+            FROM customer_order 
+            WHERE u_id = @UserId 
+            ORDER BY order_date DESC;
+        ";
         return (await _db.QueryAsync<CustomerOrder>(sql, new { UserId = userId })).ToList();
     }
 
