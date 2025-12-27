@@ -1,0 +1,24 @@
+# Use full SDK for dev with watch support
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS dev
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache krb5-libs icu-libs libgcc libstdc++
+
+# Copy only csproj first to cache restore
+COPY backend/*.csproj ./backend/
+
+WORKDIR /app/backend
+
+# Restore NuGet packages
+RUN dotnet restore
+
+# Copy everything for development
+COPY backend/ ./backend
+
+# Expose port
+EXPOSE 8080
+
+# Use dotnet watch for hot reload
+ENTRYPOINT ["dotnet", "watch", "run", "--urls", "http://0.0.0.0:8080"]

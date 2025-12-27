@@ -1,0 +1,76 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: final
+    #image: ahmwael/ops-backend:latest
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      CONNECTION_STRING: ${CONNECTION_STRING}
+      ASPNETCORE_ENVIRONMENT: Development # or Production
+      JWT__KEY: ${JWT_KEY}
+      JWT__ISSUER: OrderProcessingSystem
+      JWT__AUDIENCE: OrderProcessingSystemUsers
+      CREDIT_CARD_ENCRYPTION_KEY: ${CREDIT_CARD_ENCRYPTION_KEY}
+    ports:
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      SUPERADMIN_USERNAME: ${SUPERADMIN_USERNAME}
+      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: final
+    #image: ahmwael/ops-frontend:latest
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      NODE_ENV: Development # or Production
+    ports:
+      - 3000:3000
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  db-data:
