@@ -53,8 +53,24 @@ export async function apiRequest<T>(
       return { data: undefined as T };
     }
 
-    const data = await response.json();
-    return { data };
+    // Check if response has content before trying to parse
+    const contentType = response.headers.get("content-type");
+    const text = await response.text();
+    
+    if (!text || text.trim().length === 0) {
+      return { data: undefined as T };
+    }
+
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        const data = JSON.parse(text);
+        return { data };
+      } catch (parseError) {
+        return { error: "Failed to parse response: " + (parseError as Error).message };
+      }
+    }
+
+    return { data: text as T };
   } catch (error: any) {
     return {
       error: error.message || "Network error. Please check your connection.",
@@ -225,7 +241,7 @@ export const authorsApi = {
 
 // Admin API - Publishers
 export interface Publisher {
-  pubId: string;
+  publisherId: string;
   publisherName: string;
   address?: string;
 }
@@ -303,5 +319,40 @@ export const reportsApi = {
   getTop10Books: () => apiRequest<TopSellingBook[]>(`/reports/books/top-10`),
   getBookReplenishmentOrderCount: (isbn: string) =>
     apiRequest<BookOrderCount>(`/reports/books/${isbn}/replenishment-orders`),
+};
+
+// Admin API - Users
+export interface User {
+  uId: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  role: string;
+}
+
+export interface UserRegisterDto {
+  username: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  address?: string;
+}
+
+export const usersApi = {
+  getAll: () => apiRequest<User[]>(`/users`),
+  getByUsername: (username: string) => apiRequest<User>(`/users/${username}`),
+};
+
+export const authApi = {
+  registerAdmin: (userData: UserRegisterDto) =>
+    apiRequest(`/auth/register-admin`, {
+      method: "POST",
+      body: JSON.stringify(userData),
+    }),
 };
 

@@ -6,12 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { isAuthenticated, getCurrentUser } from "@/lib/auth";
-import { replenishmentOrdersApi, ReplenishmentOrder } from "@/lib/api";
+import { replenishmentOrdersApi, ReplenishmentOrder, booksApi, Book } from "@/lib/api";
 import { ArrowLeft, Package, CheckCircle2, Loader2, AlertCircle, Clock } from "lucide-react";
+
+interface OrderWithDetails extends ReplenishmentOrder {
+  bookDetails?: Book;
+}
 
 export default function PublisherOrdersPage() {
   const router = useRouter();
-  const [orders, setOrders] = useState<ReplenishmentOrder[]>([]);
+  const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -37,7 +41,21 @@ export default function PublisherOrdersPage() {
       setLoading(true);
       const response = await replenishmentOrdersApi.getAll();
       if (response.data) {
-        setOrders(response.data);
+        const ordersWithDetails: OrderWithDetails[] = await Promise.all(
+          response.data.map(async (order) => {
+            const orderWithDetails: OrderWithDetails = { ...order };
+            try {
+              const bookResponse = await booksApi.getByIsbn(order.isbn);
+              if (bookResponse.data) {
+                orderWithDetails.bookDetails = bookResponse.data;
+              }
+            } catch (error) {
+              console.error(`Failed to load book details for ISBN ${order.isbn}:`, error);
+            }
+            return orderWithDetails;
+          })
+        );
+        setOrders(ordersWithDetails);
       } else if (response.error) {
         setError("Failed to load orders: " + response.error);
       }
@@ -151,7 +169,7 @@ export default function PublisherOrdersPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Order ID</p>
                           <p className="font-mono font-medium">{order.orderId.slice(0, 8)}...</p>
@@ -169,6 +187,28 @@ export default function PublisherOrdersPage() {
                           <p className="font-medium">{formatDate(order.orderDate)}</p>
                         </div>
                       </div>
+                      {order.bookDetails && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Book Title</p>
+                            <p className="font-medium">{order.bookDetails.title}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Current Stock</p>
+                            <p className={`font-medium ${order.bookDetails.stock < order.bookDetails.threshold ? 'text-red-600' : ''}`}>
+                              {order.bookDetails.stock}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Threshold</p>
+                            <p className="font-medium">{order.bookDetails.threshold}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Category</p>
+                            <p className="font-medium">{order.bookDetails.category}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <Button
                       onClick={() => handleConfirm(order.orderId)}
@@ -219,7 +259,7 @@ export default function PublisherOrdersPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Order ID</p>
                           <p className="font-mono font-medium">{order.orderId.slice(0, 8)}...</p>
@@ -237,6 +277,26 @@ export default function PublisherOrdersPage() {
                           <p className="font-medium">{formatDate(order.orderDate)}</p>
                         </div>
                       </div>
+                      {order.bookDetails && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Book Title</p>
+                            <p className="font-medium">{order.bookDetails.title}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Current Stock</p>
+                            <p className="font-medium">{order.bookDetails.stock}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Threshold</p>
+                            <p className="font-medium">{order.bookDetails.threshold}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Category</p>
+                            <p className="font-medium">{order.bookDetails.category}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="ml-4 flex items-center gap-2 text-green-600">
                       <CheckCircle2 className="h-5 w-5" />

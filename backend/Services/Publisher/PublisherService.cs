@@ -40,17 +40,25 @@ public class PublisherService : IPublisherService
         };
     }
 
-    public async Task CreateAsync(PublisherCreateDto dto)
+    public async Task<PublisherResponseDto> CreateAsync(PublisherCreateDto dto)
     {
         var publisher = new Publisher
         {
             PublisherId = Guid.NewGuid(),
             PublisherName = dto.PublisherName,
             Address = dto.Address,
-            Phones = dto.Phones
+            Phones = dto.Phones ?? new List<string>()
         };
 
         await _repo.CreateAsync(publisher);
+
+        return new PublisherResponseDto
+        {
+            PublisherId = publisher.PublisherId,
+            PublisherName = publisher.PublisherName,
+            Address = publisher.Address,
+            Phones = publisher.Phones
+        };
     }
 
     public async Task<bool> UpdateAsync(Guid publisherId, PublisherUpdateDto dto)

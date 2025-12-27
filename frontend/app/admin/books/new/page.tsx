@@ -46,6 +46,11 @@ export default function AddBookPage() {
   
   // Local state for publication year input (allows typing while validating)
   const [pubYearInput, setPubYearInput] = useState<string>("");
+  
+  // Local state for stock and threshold inputs (allows typing while validating)
+  const [stockInput, setStockInput] = useState<string>("");
+  const [thresholdInput, setThresholdInput] = useState<string>("");
+  const [priceInput, setPriceInput] = useState<string>("");
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -84,13 +89,17 @@ export default function AddBookPage() {
     }
   };
 
-  // Initialize pubYearInput from formData
+  // Initialize input states from formData
   useEffect(() => {
     if (formData.pubYear !== undefined) {
       setPubYearInput(formData.pubYear.toString());
     } else {
       setPubYearInput("");
     }
+    // Start with empty strings so placeholder "0" shows instead of actual value
+    setStockInput("");
+    setThresholdInput("");
+    setPriceInput("");
   }, []); // Only run once on mount
 
   const handleCreateAuthor = async () => {
@@ -155,14 +164,29 @@ export default function AddBookPage() {
     setError("");
     setSuccess("");
 
+    // Parse stock, threshold, and price from input strings
+    const stockValue = stockInput === "" ? 0 : parseInt(stockInput, 10);
+    const thresholdValue = thresholdInput === "" ? 0 : parseInt(thresholdInput, 10);
+    const priceValue = priceInput === "" ? 0 : parseFloat(priceInput);
+
     // Validation
     if (!formData.isbn || !formData.title || !formData.category || !formData.pubId) {
       setError("Please fill in all required fields");
       return;
     }
 
-    if (formData.price <= 0) {
-      setError("Price must be greater than 0");
+    if (isNaN(priceValue) || priceValue <= 0) {
+      setError("Price must be a valid number greater than 0");
+      return;
+    }
+
+    if (isNaN(stockValue) || stockValue < 0) {
+      setError("Stock must be a valid non-negative number");
+      return;
+    }
+
+    if (isNaN(thresholdValue) || thresholdValue < 0) {
+      setError("Threshold must be a valid non-negative number");
       return;
     }
 
@@ -175,6 +199,9 @@ export default function AddBookPage() {
     try {
       const bookData: BookCreateDto = {
         ...formData,
+        price: priceValue,
+        stock: stockValue,
+        threshold: thresholdValue,
         authorIds: selectedAuthorIds,
       };
 
@@ -381,9 +408,9 @@ export default function AddBookPage() {
                   required
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option key="select-publisher" value="">Select a publisher</option>
+                  <option value="">Select a publisher</option>
                   {publishers.map((publisher) => (
-                    <option key={publisher.pubId} value={publisher.pubId}>
+                    <option key={publisher.publisherId} value={publisher.publisherId}>
                       {publisher.publisherName}
                     </option>
                   ))}
@@ -510,13 +537,23 @@ export default function AddBookPage() {
                 <Label htmlFor="price">Price *</Label>
                 <Input
                   id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                  type="text"
+                  value={priceInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow digits, decimal point, and empty string
+                    // Must match pattern: digits optionally followed by . and more digits
+                    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                      setPriceInput(value);
+                      const numValue = value === "" ? 0 : parseFloat(value);
+                      if (!isNaN(numValue)) {
+                        setFormData({ ...formData, price: numValue });
+                      }
+                    }
+                  }}
                   disabled={saving}
                   required
+                  placeholder="0.00"
                 />
               </div>
               <div className="space-y-2">
@@ -590,24 +627,44 @@ export default function AddBookPage() {
                 <Label htmlFor="stock">Stock *</Label>
                 <Input
                   id="stock"
-                  type="number"
-                  min="0"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                  type="text"
+                  value={stockInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow only digits and empty string
+                    if (value === "" || /^\d+$/.test(value)) {
+                      setStockInput(value);
+                      const numValue = value === "" ? 0 : parseInt(value, 10);
+                      if (!isNaN(numValue)) {
+                        setFormData({ ...formData, stock: numValue });
+                      }
+                    }
+                  }}
                   disabled={saving}
                   required
+                  placeholder="0"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="threshold">Threshold *</Label>
                 <Input
                   id="threshold"
-                  type="number"
-                  min="0"
-                  value={formData.threshold}
-                  onChange={(e) => setFormData({ ...formData, threshold: parseInt(e.target.value) || 0 })}
+                  type="text"
+                  value={thresholdInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow only digits and empty string
+                    if (value === "" || /^\d+$/.test(value)) {
+                      setThresholdInput(value);
+                      const numValue = value === "" ? 0 : parseInt(value, 10);
+                      if (!isNaN(numValue)) {
+                        setFormData({ ...formData, threshold: numValue });
+                      }
+                    }
+                  }}
                   disabled={saving}
                   required
+                  placeholder="0"
                 />
                 <p className="text-xs text-muted-foreground">
                   Replenishment order is created when stock falls below this value

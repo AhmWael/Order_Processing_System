@@ -36,7 +36,7 @@ public class AuthorService : IAuthorService
         };
     }
 
-    public async Task CreateAsync(AuthorCreateDto dto)
+    public async Task<AuthorResponseDto> CreateAsync(AuthorCreateDto dto)
     {
         var author = new Author
         {
@@ -45,6 +45,12 @@ public class AuthorService : IAuthorService
         };
 
         await _repo.CreateAsync(author);
+
+        return new AuthorResponseDto
+        {
+            AuthorId = author.AuthorId,
+            AuthorName = author.AuthorName
+        };
     }
 
     public async Task<bool> UpdateAsync(Guid authorId, AuthorUpdateDto dto)

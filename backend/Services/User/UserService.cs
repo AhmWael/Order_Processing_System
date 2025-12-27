@@ -76,6 +76,8 @@ public class UserService : IUserService
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Email = dto.Email,
+            Phone = dto.Phone,
+            Address = dto.Address,
             Role = "Admin"
         };
 

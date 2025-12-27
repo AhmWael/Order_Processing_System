@@ -45,7 +45,15 @@ public class AuthController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RegisterAdmin([FromBody] UserRegisterDto dto)
     {
-        return Ok(await _service.RegisterAdminAsync(dto));
+        try
+        {
+            var result = await _service.RegisterAdminAsync(dto);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("login")]
