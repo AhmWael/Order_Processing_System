@@ -68,6 +68,7 @@ builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddScoped<IReplenishmentOrderService, ReplenishmentOrderService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<ICustomerOrderService, CustomerOrderService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ICreditCardService, CreditCardService>();
 
