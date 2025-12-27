@@ -735,39 +735,56 @@
 
 ## Screen Flow Diagram
 
-```
-┌─────────────┐
-│   Login (/) │
-└──────┬──────┘
-       │
-       ├─── Customer ───┐
-       │                ▼
-       │         ┌──────────────┐
-       │         │ User Home    │
-       │         └──────┬───────┘
-       │                │
-       │                ├── Books ──┐
-       │                │           ├── Book Details
-       │                │           └── Search Results
-       │                │
-       │                ├── Cart ──► Checkout ──► Orders
-       │                │
-       │                └── Profile
-       │
-       └─── Admin ──────┐
-                        ▼
-                 ┌──────────────┐
-                 │ Admin Home   │
-                 └──────┬───────┘
-                        │
-                        ├── Manage Books
-                        ├── Add Book
-                        ├── Publisher Orders
-                        └── Reports
-
-┌────────────┐
-│   Signup   │ ──► Login
-└────────────┘
+```mermaid
+graph TD
+    Login[Login /]
+    Signup[Signup /signup]
+    
+    %% Customer Flow
+    UserHome[User Home /user/home]
+    Books[Books Catalog /user/books]
+    BookDetails[Book Details /user/books/:isbn]
+    SearchResults[Search Results /user/search]
+    Cart[Shopping Cart /user/cart]
+    Checkout[Checkout /user/checkout]
+    Orders[My Orders /user/orders]
+    Profile[Customer Profile /user/profile]
+    
+    %% Admin Flow
+    AdminHome[Admin Dashboard /admin/home]
+    ManageBooks[Manage Books /admin/books]
+    AddBook[Add New Book /admin/books/new]
+    PublisherOrders[Publisher Orders /admin/publisher-orders]
+    Reports[Reports /admin/reports]
+    
+    %% Authentication Flow
+    Signup --> Login
+    Login -->|Customer Role| UserHome
+    Login -->|Admin Role| AdminHome
+    
+    %% Customer Navigation
+    UserHome --> Books
+    UserHome --> Cart
+    UserHome --> Profile
+    Books --> BookDetails
+    Books --> SearchResults
+    Cart --> Checkout
+    Checkout --> Orders
+    
+    %% Admin Navigation
+    AdminHome --> ManageBooks
+    AdminHome --> AddBook
+    AdminHome --> PublisherOrders
+    AdminHome --> Reports
+    
+    %% Styling
+    classDef authClass fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#01579b
+    classDef customerClass fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#4a148c
+    classDef adminClass fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
+    
+    class Login,Signup authClass
+    class UserHome,Books,BookDetails,SearchResults,Cart,Checkout,Orders,Profile customerClass
+    class AdminHome,ManageBooks,AddBook,PublisherOrders,Reports adminClass
 ```
 
 ---
