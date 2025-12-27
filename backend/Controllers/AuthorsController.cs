@@ -33,8 +33,15 @@ public class AuthorController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] AuthorCreateDto dto)
     {
-        await _service.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = dto.AuthorName }, dto);
+        try
+        {
+            var created = await _service.CreateAsync(dto);
+            return Ok(created);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while creating the author.", error = ex.Message });
+        }
     }
 
     [HttpPut("{id:guid}")]

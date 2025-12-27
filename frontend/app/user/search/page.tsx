@@ -32,7 +32,7 @@ function SearchResultsContent() {
     }
 
     const currentUser = getCurrentUser();
-    if (!currentUser || currentUser.role !== "Customer") {
+    if (!currentUser || (currentUser.role !== "Customer" && currentUser.role !== "Admin")) {
       router.push("/");
       return;
     }

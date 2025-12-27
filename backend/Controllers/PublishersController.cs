@@ -33,8 +33,15 @@ public class PublisherController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PublisherCreateDto dto)
     {
-        await _service.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = dto.PublisherName }, dto);
+        try
+        {
+            var created = await _service.CreateAsync(dto);
+            return Ok(created);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while creating the publisher.", error = ex.Message });
+        }
     }
 
     [HttpPut("{id:guid}")]
