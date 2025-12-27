@@ -126,7 +126,7 @@ jobs:
         if: env.VERSION != ''
         run: |
           docker build \
-            -f frontend/Dockerfile \
+            -f Dockerfile.frontend \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/ops-frontend:${VERSION} \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/ops-frontend:latest \
             frontend
