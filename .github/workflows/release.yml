@@ -129,7 +129,7 @@ jobs:
             -f Dockerfile.frontend \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/ops-frontend:${VERSION} \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/ops-frontend:latest \
-            frontend
+            .
 
       - name: Push Frontend Images
         if: env.VERSION != ''
