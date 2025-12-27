@@ -8,8 +8,8 @@ public class CartRepository : ICartRepository
 
     public async Task<Guid> GetCartIdAsync(Guid userId)
     {
-        const string sql = @"SELECT cart_id FROM cart WHERE u_id = @UserId;";
-        var id = await _db.QuerySingleOrDefaultAsync<Guid?>(sql, new { UserId = userId });
+        const string sql = @"SELECT cart_id FROM cart WHERE u_id = @UserId ORDER BY cart_id LIMIT 1;";
+        var id = await _db.QueryFirstOrDefaultAsync<Guid?>(sql, new { UserId = userId });
         if (id == null)
         {
             const string insert = @"INSERT INTO cart(u_id) VALUES(@UserId) RETURNING cart_id;";
