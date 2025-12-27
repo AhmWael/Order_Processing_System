@@ -51,26 +51,26 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # frontend:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.frontend
-  #     target: final
-  #   #image: ahmwael/ops-frontend:latest
-  #   restart: unless-stopped
-  #   env_file:
-  #     - ./.env
-  #   environment:
-  #     NODE_ENV: Development # or Production
-  #   ports:
-  #     - 3000:3000
-  #   depends_on:
-  #     - backend
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: final
+    #image: ahmwael/ops-frontend:latest
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      NODE_ENV: Development # or Production
+    ports:
+      - 3000:3000
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   db-data:
