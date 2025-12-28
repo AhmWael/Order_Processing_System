@@ -36,4 +36,17 @@ public class UsersController : ControllerBase
         }
         return Ok(user);
     }
+
+    [HttpPut("me")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UserUpdateDto dto)
+    {
+        var uidClaim = User.FindFirst("uid")?.Value;
+        if (uidClaim == null)
+            return Unauthorized();
+
+        var userId = Guid.Parse(uidClaim);
+
+        await _service.UpdateProfileAsync(userId, dto);
+        return NoContent();
+    }
 }

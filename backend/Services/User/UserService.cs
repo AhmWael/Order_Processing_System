@@ -237,4 +237,19 @@ public class UserService : IUserService
         };
     }
 
+    public async Task UpdateProfileAsync(Guid userId, UserUpdateDto dto)
+    {
+        var existingUser = await _repo.GetByIdAsync(userId);
+        if (existingUser == null)
+            throw new Exception("User not found");
+
+        // Optional: prevent email duplication
+        var emailOwner = await _repo.GetByEmailAsync(dto.Email);
+        if (emailOwner != null && emailOwner.UId != userId)
+            throw new Exception("Email already in use");
+
+        await _repo.UpdateProfileAsync(userId, dto);
+    }
+
+
 }

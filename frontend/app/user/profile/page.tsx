@@ -233,29 +233,24 @@ export default function ProfilePage() {
     try {
       const currentUser = getCurrentUser();
       if (!currentUser) return;
-
-      // Note: This assumes there's an update endpoint. If not, we'll need to create one.
-      // For now, we'll show a message that profile updates need backend support
-      setError("Profile update functionality requires backend API endpoint. Please contact support.");
       
-      // Uncomment when backend endpoint is available:
-      // const response = await apiRequest(`/users/${currentUser.username}`, {
-      //   method: "PUT",
-      //   body: JSON.stringify({
-      //     FirstName: formData.firstName,
-      //     LastName: formData.lastName,
-      //     Email: formData.email,
-      //     Phone: formData.phone || null,
-      //     Address: formData.address || null,
-      //   }),
-      // });
+      const response = await apiRequest(`/users/me`, {
+        method: "PUT",
+        body: JSON.stringify({
+          FirstName: formData.firstName,
+          LastName: formData.lastName,
+          Email: formData.email,
+          Phone: formData.phone || null,
+          Address: formData.address || null,
+        }),
+      });
       
-      // if (response.error) {
-      //   setError(response.error);
-      // } else {
-      //   setSuccess("Profile updated successfully!");
-      //   await loadProfile();
-      // }
+      if (response.error) {
+        setError(response.error);
+      } else {
+        setSuccess("Profile updated successfully!");
+        await loadProfile();
+      }
     } catch (error: any) {
       setError("Failed to update profile: " + (error.message || "Unknown error"));
     } finally {
