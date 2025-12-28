@@ -1,4 +1,5 @@
 using backend.Models;
+using backend.DTOs;
 
 namespace backend.Repositories;
 
@@ -8,7 +9,9 @@ public interface IUserRepository
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByLoginAsync(string login);
     Task<IEnumerable<User>> GetAllAsync();
-    Task<Guid> CreateAsync(User user);
+    Task CreateAsync(User user);
+    Task<User?> GetByIdAsync(Guid id);
+    Task UpdateProfileAsync(Guid id, UserUpdateDto dto);
     
 
 }

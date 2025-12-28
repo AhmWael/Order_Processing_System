@@ -1,6 +1,7 @@
 using System.Data;
 using Dapper;
 using backend.Models;
+using backend.DTOs;
 
 namespace backend.Repositories;
 
@@ -40,7 +41,7 @@ public class UserRepository : IUserRepository
 
     }
 
-    public async Task<Guid> CreateAsync(User user)
+    public async Task CreateAsync(User user)
     {
         const string sql = @"
             INSERT INTO ""user"" (username, password, last_name, first_name, email, phone, address, role)
@@ -48,7 +49,37 @@ public class UserRepository : IUserRepository
             RETURNING u_id;
         ";
 
-        return await _db.ExecuteScalarAsync<Guid>(sql, user);
+        user.UId = await _db.ExecuteScalarAsync<Guid>(sql, user);
+    }
+
+    public async Task<User?> GetByIdAsync(Guid id)
+    {
+        const string sql = @"SELECT * FROM ""user"" WHERE u_id = @Id;";
+        return await _db.QuerySingleOrDefaultAsync<User>(sql, new { Id = id });
+    }
+
+    public async Task UpdateProfileAsync(Guid id, UserUpdateDto dto)
+    {
+        const string sql = @"
+            UPDATE ""user""
+            SET
+                first_name = @FirstName,
+                last_name  = @LastName,
+                email      = @Email,
+                phone      = @Phone,
+                address    = @Address
+            WHERE u_id = @Id;
+        ";
+
+        await _db.ExecuteAsync(sql, new
+        {
+            Id = id,
+            dto.FirstName,
+            dto.LastName,
+            dto.Email,
+            dto.Phone,
+            dto.Address
+        });
     }
 
 }

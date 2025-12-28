@@ -648,7 +648,234 @@
    - Verifies authentication before rendering
    - Shows loading message during verification
 
-**Note:** The actual book management, publisher orders, and reports pages are referenced but not implemented in the current codebase. The dashboard serves as a navigation hub to these future admin features.
+---
+
+### 12. Manage Books Page (`/admin/books`)
+**File:** [frontend/app/admin/books/page.tsx](../frontend/app/admin/books/page.tsx)
+
+**Purpose:** Admin interface for managing book inventory and details
+
+**Logic Flow:**
+1. **Authentication & Authorization:**
+   - Verifies user is authenticated with Admin role
+   - Redirects non-admin users to login
+
+2. **Data Loading:**
+   - Fetches all books with complete details
+   - Loads all authors for author assignment
+   - Removes duplicate ISBNs from display
+
+3. **Search & Filter:**
+   - Real-time search across book title, ISBN, author names, and category
+   - Client-side filtering for immediate results
+   - Search bar with magnifying glass icon
+
+4. **Book Management Operations:**
+   - **Edit Book:**
+     - Inline editing with expandable form
+     - Editable fields: title, publisher ID, publication year, price, category, stock, threshold
+     - Author assignment with multi-select checkboxes
+     - Real-time validation
+     - Save/Cancel buttons with loading states
+   
+   - **Delete Book:**
+     - Trash icon with confirmation dialog
+     - Shows loading state during deletion
+     - Removes book from inventory entirely
+
+5. **Book Display:**
+   - Tabular layout with book cover thumbnails
+   - Shows ISBN, title, authors, price, stock, category
+   - Stock level indicators (low stock warnings)
+   - Publication year and threshold information
+
+6. **Navigation:**
+   - "Add New Book" button linking to creation form
+   - Back to Admin Dashboard
+   - Breadcrumb navigation
+
+7. **Error & Success Handling:**
+   - Success messages for updates and deletions
+   - Error handling for failed operations
+   - Form validation feedback
+
+---
+
+### 13. Add New Book Page (`/admin/books/new`)
+**File:** [frontend/app/admin/books/new/page.tsx](../frontend/app/admin/books/new/page.tsx)
+
+**Purpose:** Create new books in the inventory system
+
+**Logic Flow:**
+1. **Authentication Check:**
+   - Verifies Admin role access
+
+2. **Form Fields:**
+   - ISBN (required, unique identifier)
+   - Title (required)
+   - Publisher selection from available publishers
+   - Publication year
+   - Price (required, numeric validation)
+   - Category
+   - Initial stock quantity
+   - Stock threshold for reordering
+   - Author assignment (multi-select)
+
+3. **Author Management:**
+   - Load all available authors
+   - Multi-select checkbox interface
+   - Create new authors if needed
+
+4. **Validation:**
+   - Required field validation
+   - ISBN format and uniqueness checking
+   - Price and stock numeric validation
+   - Author selection requirement
+
+5. **Creation Process:**
+   - Validates all form data
+   - Submits book creation request
+   - Handles success/error responses
+   - Redirects to book management on success
+
+---
+
+### 14. Publisher Orders Page (`/admin/publisher-orders`)
+**File:** [frontend/app/admin/publisher-orders/page.tsx](../frontend/app/admin/publisher-orders/page.tsx)
+
+**Purpose:** Manage replenishment orders for low-stock books
+
+**Logic Flow:**
+1. **Order Data Loading:**
+   - Fetches all pending replenishment orders
+   - Loads book details for each order
+   - Combines order data with book information
+
+2. **Order Display:**
+   - Shows order ID, book details, current stock
+   - Displays order quantity and urgency indicators
+   - Book cover thumbnails with order information
+
+3. **Order Management:**
+   - **Confirm Order:**
+     - Button to confirm replenishment order
+     - Updates stock levels automatically
+     - Marks order as completed
+     - Shows confirmation loading state
+   
+   - **Order Status:**
+     - Pending orders highlighted
+     - Completed orders marked with checkmarks
+     - Time-based priority indicators
+
+4. **Book Information:**
+   - Shows current stock vs. threshold levels
+   - Displays book title, ISBN, category
+   - Indicates critical stock levels
+
+5. **Automated System:**
+   - Orders automatically generated when stock falls below threshold
+   - Admin confirmation required before processing
+   - Integrates with inventory management system
+
+---
+
+### 15. Reports Page (`/admin/reports`)
+**File:** [frontend/app/admin/reports/page.tsx](../frontend/app/admin/reports/page.tsx)
+
+**Purpose:** Business intelligence and analytics dashboard
+
+**Logic Flow:**
+1. **Report Categories:**
+   - **Sales Reports:**
+     - Previous month total sales
+     - Sales by specific date
+     - Date range analysis
+   
+   - **Top Customers:**
+     - Customers by total purchase amount
+     - Customer ranking and statistics
+     - Purchase history insights
+   
+   - **Best-Selling Books:**
+     - Books by total sales volume
+     - Revenue by book category
+     - Inventory performance metrics
+
+2. **Sales Analytics:**
+   - **Previous Month Sales:**
+     - Automatic calculation of previous month revenue
+     - Comparison metrics and trends
+   
+   - **Date-Specific Sales:**
+     - Date picker for specific day analysis
+     - Real-time sales data fetching
+     - Daily performance metrics
+
+3. **Customer Analytics:**
+   - Top customer identification by spend
+   - Customer loyalty metrics
+   - Purchase pattern analysis
+
+4. **Book Performance:**
+   - Best-selling books ranking
+   - Revenue contribution by title
+   - Stock turnover analysis
+
+5. **Visual Representation:**
+   - Card-based layout for each report type
+   - Statistical indicators and trends
+   - Color-coded performance metrics
+
+6. **Interactive Features:**
+   - Date selection for custom reports
+   - Real-time data updates
+   - Export capabilities for business analysis
+
+---
+
+### 16. Customer Management Page (`/admin/customers`)
+**File:** [frontend/app/admin/customers/page.tsx](../frontend/app/admin/customers/page.tsx)
+
+**Purpose:** Admin interface for managing customer accounts
+
+**Logic Flow:**
+1. **Customer Data Loading:**
+   - Fetches all registered customers
+   - Displays customer profiles and account information
+
+2. **Customer Information Display:**
+   - Customer details (name, email, registration date)
+   - Order history summary
+   - Account status and activity
+
+3. **Customer Management:**
+   - View detailed customer profiles
+   - Monitor customer activity and purchases
+   - Account management capabilities
+
+---
+
+### 17. Admin Registration Page (`/admin/register-admin`)
+**File:** [frontend/app/admin/register-admin/page.tsx](../frontend/app/admin/register-admin/page.tsx)
+
+**Purpose:** Create new administrator accounts
+
+**Logic Flow:**
+1. **Registration Form:**
+   - Admin-specific account creation
+   - Required fields for admin users
+   - Role assignment and permissions
+
+2. **Validation:**
+   - Admin credential validation
+   - Security requirements for admin accounts
+   - Authorization checks
+
+3. **Account Creation:**
+   - Creates new admin user accounts
+   - Assigns appropriate admin permissions
+   - Integrates with authentication system
 
 ---
 
@@ -725,11 +952,15 @@
 - Type-safe API calls with TypeScript
 - Error handling and response parsing
 - Endpoints for:
-  - Books (getAll, getByIsbn)
+  - Books (getAll, getByIsbn, create, update, delete)
   - Cart (getCart, addItem, removeItem, checkout)
   - Orders (getAll)
   - Credit Cards (getAll, addCard, deleteCard)
-  - Users (profile management)
+  - Users (profile management, getAllCustomers)
+  - Authors (getAll, create, update)
+  - Publishers (getAll)
+  - Reports (totalSales, topCustomers, topBooks)
+  - Replenishment Orders (getAll, confirm)
 
 ---
 
@@ -756,6 +987,8 @@ graph TD
     AddBook[Add New Book /admin/books/new]
     PublisherOrders[Publisher Orders /admin/publisher-orders]
     Reports[Reports /admin/reports]
+    Customers[Customer Management /admin/customers]
+    RegisterAdmin[Register Admin /admin/register-admin]
     
     %% Authentication Flow
     Signup --> Login
@@ -776,6 +1009,9 @@ graph TD
     AdminHome --> AddBook
     AdminHome --> PublisherOrders
     AdminHome --> Reports
+    AdminHome --> Customers
+    AdminHome --> RegisterAdmin
+    ManageBooks --> AddBook
     
     %% Styling
     classDef authClass fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#01579b
@@ -784,7 +1020,7 @@ graph TD
     
     class Login,Signup authClass
     class UserHome,Books,BookDetails,SearchResults,Cart,Checkout,Orders,Profile customerClass
-    class AdminHome,ManageBooks,AddBook,PublisherOrders,Reports adminClass
+    class AdminHome,ManageBooks,AddBook,PublisherOrders,Reports,Customers,RegisterAdmin adminClass
 ```
 
 ---
@@ -838,4 +1074,12 @@ This Order Processing System implements a comprehensive e-commerce interface wit
 - **Comprehensive error handling** for better user experience
 - **Type safety** with TypeScript throughout
 
-The customer journey flows naturally from browsing to purchasing, while admin screens provide centralized access to management operations. All screens maintain consistent authentication checks, loading states, and error handling patterns.
+The customer journey flows naturally from browsing to purchasing, while admin screens provide comprehensive management capabilities including:
+
+- **Complete Book Management:** CRUD operations for books with real-time stock tracking
+- **Inventory Control:** Automated replenishment orders with admin confirmation workflow
+- **Business Analytics:** Comprehensive reports for sales, customers, and book performance
+- **Customer Oversight:** Customer account management and activity monitoring
+- **Admin User Management:** Secure admin account creation and role management
+
+All screens maintain consistent authentication checks, loading states, and error handling patterns with role-based access control ensuring proper security boundaries.

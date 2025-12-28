@@ -47,6 +47,8 @@ public class UserService : IUserService
         user.Password = _passwordHasher.HashPassword(user, dto.Password);
 
         await _repo.CreateAsync(user);
+        if (user.UId == Guid.Empty)
+            throw new Exception("User ID was not generated");
 
         var accessToken = GenerateJwt(user, false);   // short-lived access token
         var refreshToken = GenerateJwt(user, true);   // long-lived refresh token
@@ -84,6 +86,8 @@ public class UserService : IUserService
         user.Password = _passwordHasher.HashPassword(user, dto.Password);
 
         await _repo.CreateAsync(user);
+        if (user.UId == Guid.Empty)
+            throw new Exception("User ID was not generated");
 
         var accessToken = GenerateJwt(user, false);   // short-lived access token
         var refreshToken = GenerateJwt(user, true);   // long-lived refresh token
@@ -232,5 +236,20 @@ public class UserService : IUserService
             Role = user.Role
         };
     }
+
+    public async Task UpdateProfileAsync(Guid userId, UserUpdateDto dto)
+    {
+        var existingUser = await _repo.GetByIdAsync(userId);
+        if (existingUser == null)
+            throw new Exception("User not found");
+
+        // Optional: prevent email duplication
+        var emailOwner = await _repo.GetByEmailAsync(dto.Email);
+        if (emailOwner != null && emailOwner.UId != userId)
+            throw new Exception("Email already in use");
+
+        await _repo.UpdateProfileAsync(userId, dto);
+    }
+
 
 }

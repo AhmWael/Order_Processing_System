@@ -10,6 +10,7 @@ public interface IUserService
     Task<UserResponseDto?> GetUserByUsernameAsync(string username);
     Task<IEnumerable<UserResponseDto>> GetAllUsersAsync();
     Task<AuthResponseDto> RefreshAsync(string refreshToken);
+    Task UpdateProfileAsync(Guid userId, UserUpdateDto dto);
 
 }
 
