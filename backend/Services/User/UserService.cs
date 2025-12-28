@@ -47,6 +47,8 @@ public class UserService : IUserService
         user.Password = _passwordHasher.HashPassword(user, dto.Password);
 
         await _repo.CreateAsync(user);
+        if (user.UId == Guid.Empty)
+            throw new Exception("User ID was not generated");
 
         var accessToken = GenerateJwt(user, false);   // short-lived access token
         var refreshToken = GenerateJwt(user, true);   // long-lived refresh token
@@ -84,6 +86,8 @@ public class UserService : IUserService
         user.Password = _passwordHasher.HashPassword(user, dto.Password);
 
         await _repo.CreateAsync(user);
+        if (user.UId == Guid.Empty)
+            throw new Exception("User ID was not generated");
 
         var accessToken = GenerateJwt(user, false);   // short-lived access token
         var refreshToken = GenerateJwt(user, true);   // long-lived refresh token

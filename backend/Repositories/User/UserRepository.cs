@@ -40,7 +40,7 @@ public class UserRepository : IUserRepository
 
     }
 
-    public async Task<Guid> CreateAsync(User user)
+    public async Task CreateAsync(User user)
     {
         const string sql = @"
             INSERT INTO ""user"" (username, password, last_name, first_name, email, phone, address, role)
@@ -48,7 +48,7 @@ public class UserRepository : IUserRepository
             RETURNING u_id;
         ";
 
-        return await _db.ExecuteScalarAsync<Guid>(sql, user);
+        user.UId = await _db.ExecuteScalarAsync<Guid>(sql, user);
     }
 
 }
