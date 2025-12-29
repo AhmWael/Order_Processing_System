@@ -17,6 +17,9 @@ using backend.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
+// Configure Npgsql to read timestamps as UTC
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", false);
+
 // Load DB Connection
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 if (string.IsNullOrEmpty(connectionString))
@@ -41,6 +44,8 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        // Ensure DateTime values are serialized as UTC with 'Z' suffix
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
 

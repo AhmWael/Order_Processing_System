@@ -15,17 +15,28 @@ public class ReplenishmentOrderRepository : IReplenishmentOrderRepository
 
     public async Task<IEnumerable<ReplenishmentOrder>> GetAllAsync()
     {
-        return await _db.QueryAsync<ReplenishmentOrder>(
+        var orders = await _db.QueryAsync<ReplenishmentOrder>(
             "SELECT * FROM replenishment_order ORDER BY order_date DESC;"
         );
+        // Ensure DateTime is marked as UTC
+        foreach (var order in orders)
+        {
+            order.OrderDate = DateTime.SpecifyKind(order.OrderDate, DateTimeKind.Utc);
+        }
+        return orders;
     }
 
     public async Task<ReplenishmentOrder?> GetByIdAsync(Guid orderId)
     {
-        return await _db.QuerySingleOrDefaultAsync<ReplenishmentOrder>(
+        var order = await _db.QuerySingleOrDefaultAsync<ReplenishmentOrder>(
             "SELECT * FROM replenishment_order WHERE order_id = @OrderId;",
             new { OrderId = orderId }
         );
+        if (order != null)
+        {
+            order.OrderDate = DateTime.SpecifyKind(order.OrderDate, DateTimeKind.Utc);
+        }
+        return order;
     }
 
     public async Task ConfirmAsync(Guid orderId)
